@@ -26,7 +26,7 @@
   .rail .nav-help { display: none; }
 
   /* Sistema de botones: base secundaria y acciones principales moradas. */
-  :is(.btn-primary, .btn-ghost, .demo-button, .tut-button, .share-sheet__button, .share-sheet__close, .who-clear, .back, .back-mx, .you-seg button, .preferences button, .tool, .globe-zoom button, #zoom-in, #zoom-out) {
+  :is(.btn-primary, .btn-ghost, .demo-button, .tut-button, .share-sheet__button, .share-sheet__close, .who-clear, .back, .back-mx, .you-seg button, .preferences button, .tool, .globe-zoom button) {
     box-sizing: border-box; min-height: 48px; max-width: 100%; padding: 10px 14px;
     border-radius: 0 !important; border: 2px solid var(--px-line, var(--ink)) !important;
     background: var(--px-card, var(--panel)) !important; color: var(--ink) !important;
@@ -52,12 +52,12 @@
 
   /* El nombre accesible del botón Atrás permanece en el marcado. */
   .demo .demo-bubble .demo-actions { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 10px; padding-top: 8px; }
-  .demo .demo-bubble .demo-actions .demo-button--ghost {
+  .demo .demo-bubble .demo-actions .demo-button--ghost:first-child {
     position: relative; width: 48px; min-width: 48px; height: 48px; min-height: 48px;
     padding: 0; overflow: hidden; text-indent: -9999px; white-space: nowrap;
   }
-  .demo .demo-bubble .demo-actions .demo-button--ghost::before { content: none; }
-  .demo .demo-bubble .demo-actions .demo-button--ghost::after {
+  .demo .demo-bubble .demo-actions .demo-button--ghost:first-child::before { content: none; }
+  .demo .demo-bubble .demo-actions .demo-button--ghost:first-child::after {
     content: ''; position: absolute; left: 19px; top: 16px; width: 10px; height: 10px;
     border: solid currentColor; border-width: 0 0 2.5px 2.5px; transform: rotate(45deg);
   }

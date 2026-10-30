@@ -1,15 +1,16 @@
 // Coloca aquí el dominio público al desplegar.
-const SITE_URL = '';
-import { icon } from './icons.js?v=73';
-import { t, lang, locale, setLang, applyStatic, diff1 } from './i18n.js?v=73';
+const SITE_URL = 'https://atlasciudadano.nodobravo.mx';
+import { mountSheet } from './sheet.js?v=80';
+import { icon } from './icons.js?v=80';
+import { t, lang, locale, setLang, applyStatic, diff1 } from './i18n.js?v=80';
 // Pixel Ciudadano · Atlas ciudadano (INE, CCPC 2009–2024). Equipo Pixel Ciudadano.
 // Layout "Atlas": menú lateral · tira de estados · objeto central (globo → mapa) · ficha de detalle.
-import { mountGlobe } from './globe.js?v=73';
-import { renderCard } from './card.js?v=73';
-import { startDemo } from './demo.js?v=73';
-import { mountYou } from './you.js?v=73';
-import { startTutorial } from './tutorial.js?v=73';
-import { openShareSheet } from './share.js?v=73';
+import { mountGlobe } from './globe.js?v=80';
+import { renderCard } from './card.js?v=80';
+import { startDemo } from './demo.js?v=80';
+import { mountYou } from './you.js?v=80';
+import { startTutorial } from './tutorial.js?v=80';
+import { openShareSheet } from './share.js?v=80';
 
 const $ = s => document.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
@@ -22,6 +23,8 @@ const localTypes = (cc = S.cc) => t(cc === '09' ? 'text.alcaldias' : 'fix.munici
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const narrowMq = matchMedia('(max-width: 860px)');
 const narrow = () => narrowMq.matches;
+narrowMq.addEventListener('change', () => renderDetail());
+let mobileSheet = null;
 
 const SEX_LABEL = { get todos() { return t("text.1"); }, get mujeres() { return t("text.2"); }, get hombres() { return t("text.3"); } };
 const SEX_IDX = { todos: [0, 1, 2], mujeres: [1], hombres: [0] };   // 2 = no binario (2024), cuenta en "Todos"
@@ -108,7 +111,15 @@ function targetView(b) {
     const sb = stage.getBoundingClientRect(), db = $('#detail').getBoundingClientRect();
     const dk = document.body.classList.contains('demoing') && $('#mission .demo-dock:not(.demo-dock--final)');   // en la demo manda la hoja de Pixel
     top = 60; left = right = 12; const sheetTop = db.height ? db.top : sb.bottom;   // la ficha se oculta durante la demo y el juego
-    bottom = Math.max(16, sb.bottom - (dk ? Math.min(sheetTop, dk.getBoundingClientRect().top) : sheetTop) + 12);
+    // En la demo cuenta lo más alto entre la hoja y la cabeza de Pixel; en el juego, el panel de la pregunta
+    const px = dk && $('#stage .demo-stage-pixel:not([hidden])'), gp = document.body.classList.contains('gaming') && $('#mission .mission__panel');
+    let limit = dk ? Math.min(sheetTop, dk.getBoundingClientRect().top) : sheetTop;
+    if (px && px.getBoundingClientRect().height) limit = Math.min(limit, px.getBoundingClientRect().top);
+    if (gp && gp.getBoundingClientRect().height) limit = Math.min(limit, gp.getBoundingClientRect().top);
+    if (dk) top = 28;
+    const hud = gp && $('#mission .mission__hud');
+    if (hud) top = Math.max(top, hud.getBoundingClientRect().bottom - sb.top + 8);
+    bottom = Math.max(16, sb.bottom - limit + (S.mode === 'map' && !document.body.matches('.demoing,.gaming,.presenting') ? 52 : 8));
   }
   // En el juego: la barra superior y el panel de la pregunta no deben tapar el mapa
   if (document.body.classList.contains('gaming') && !narrow()) {
@@ -135,7 +146,7 @@ function paintSpotLabels(list = S.spot) {
   gLabels.replaceChildren();
   if (!list || !list.length || list.length > 3 || S.cc) return;
   list.forEach((cc, idx) => {
-    const b = GEO[cc].b, r = calc(stateFlat(cc)).r, txt = `${nameOf(cc)} · ${r == null ? t('card.noData') : one(r) + ' %'}`;
+    const b = GEO[cc].b, r = calc(stateFlat(cc)).r, txt = `${nameOf(cc)} · ${r == null ? t('card.noData') : one(r) + '\u00a0%'}`;
     const g = svgEl('g', { class: 'spot-label' }); const below = idx % 2 === 1;   // se alternan arriba y abajo del estado para no encimarse
     g.dataset.x = (b[0] + b[2]) / 2; g.dataset.y = below ? b[3] : b[1];
     const w = 14 + txt.length * 7.4;
@@ -146,15 +157,19 @@ function paintSpotLabels(list = S.spot) {
   scaleLabels();
 }
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+let mobileFlightDone = null;
 function animateView(to, ms) {
+  if (narrow()) { mobileFlightDone?.(); mobileFlightDone = null; }
+  if (narrow()) ms = Math.min(ms, 300);
   cancelAnimationFrame(raf);
   if (!view || reduced || !ms) { setView(to); return Promise.resolve(); }
   const from = { ...view }, t0 = performance.now();
   return new Promise(res => {
+    if (narrow()) mobileFlightDone = res;
     const f = now => {
       const t = Math.min(1, (now - t0) / ms), e = ease(t);
       setView({ x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, w: from.w + (to.w - from.w) * e, h: from.h + (to.h - from.h) * e, k: to.k });
-      if (t < 1) raf = requestAnimationFrame(f); else res();
+      if (t < 1) raf = requestAnimationFrame(f); else { if (narrow()) mobileFlightDone = null; res(); }
     };
     raf = requestAnimationFrame(f);
   });
@@ -215,6 +230,7 @@ const say = t => { const s = $('#sr'); if (s) { s.textContent = ''; setTimeout((
 /* ---------- navegación ---------- */
 async function selectState(cc, { instant = false, keepRegion = false } = {}) {
   if (S.mode === 'home') await enterMap({ instant: true });
+  const detent = narrow() && S.cc && cc ? mobileSheet?.detent : null;
   S.cc = cc; S.mpio = null; S.list = false; S.q = '';
   if (cc && !keepRegion && S.region && !REGIONS.find(r => r.k === S.region).cc.includes(cc)) S.region = null;
   document.body.classList.toggle('in-state', !!cc);
@@ -222,6 +238,7 @@ async function selectState(cc, { instant = false, keepRegion = false } = {}) {
   markStrip(true);
   paintStates(); renderAll(); writeHash();
   if (cc) say(`${nameOf(cc)}: ${one(calc(stateFlat(cc)).r)}${t("text.26")}`);
+  if (narrow()) { $('#detail-body').scrollTop = 0; mobileSheet?.set(detent || (cc ? 'half' : 'peek')); }
   const fly = flyTo(activeBox(), instant ? 0 : 750);
   const sm = cc ? showMpios(cc) : null;
   await fly; await sm;
@@ -233,7 +250,7 @@ function selectMpio(id, { focus = true } = {}) {
   const sel = gMpios.querySelector('.sel'); if (sel) gMpios.append(sel);
   renderDetail(); renderCaption(); writeHash();
   $('#detail').scrollTop = 0;   // la ficha siempre vuelve arriba al elegir un municipio
-  if (narrow() && S.mpio) { $('#detail').classList.remove('open'); $('.sheet-handle').setAttribute('aria-expanded', 'false'); requestAnimationFrame(() => setView(targetView(activeBox()))); }
+  if (narrow()) { $('#detail-body').scrollTop = 0; mobileSheet?.set(S.mpio ? 'half' : 'peek'); }
   if (focus) { if (!narrow()) $('#detail').classList.add('open'); setTimeout(() => $('#d-title')?.focus({ preventScroll: true }), 60); }
 }
 function selectRegion(k) {
@@ -286,7 +303,7 @@ function renderStrip() {
     const cc = c.dataset.cc, r = rates[+cc - 1].r;
     c.hidden = !vis.has(cc);
     c.querySelector('.nm').textContent = STRIP_NAMES.has(cc) ? t('strip.' + cc) : nameOf(cc);
-    c.querySelector('.rt').textContent = r == null ? '—' : `${one(r)} %`;
+    c.querySelector('.rt').textContent = r == null ? '—' : `${one(r)}\u00a0%`;
     c.style.setProperty('--c', solidFor(r));
 
     c.setAttribute('aria-selected', String(cc === S.cc));
@@ -321,7 +338,7 @@ function renderRegions() {
     b.querySelector('span').textContent = REGIONS.find(x => x.k === k).n;
     b.setAttribute('aria-pressed', String(S.region === k));
     b.querySelector('i').style.background = solidFor(r);
-    b.querySelector('small').textContent = `${REGIONS.find(x => x.k === k).cc.length}${t("text.32")}${r == null ? '—' : one(r) + ' %'}`;
+    b.querySelector('small').textContent = `${REGIONS.find(x => x.k === k).cc.length}${t("text.32")}${r == null ? '—' : one(r) + '\u00a0%'}`;
     // Nombre accesible aunque el riel compacto oculte el texto
     b.setAttribute('aria-label', `${REGIONS.find(x => x.k === k).n}, ${b.querySelector('small').textContent}`);
   }
@@ -335,7 +352,7 @@ function renderFeatured() {
   const picks = [top[0], top[top.length - 1], top[1]];
   const f = picks[featIdx % picks.length], i = top.indexOf(f);
   const label = i === 0 ? t("text.33") : i === top.length - 1 ? t("text.34") : t("text.35");
-  $('#featured').innerHTML = `<p class="feat-k">${label} · ${S.year}</p><div class="feat-art" style="background-image:url(assets/estados/thumb/${f.cc}.webp)"></div><p class="feat-t">${esc(nameOf(f.cc))}</p><p class="feat-d">${cap(voted(f.r, group()))}: <b>${one(f.r)} %</b>.</p><button type="button" class="feat-go" data-cc="${f.cc}${t("text.36")}`;
+  $('#featured').innerHTML = `<p class="feat-k">${label} · ${S.year}</p><div class="feat-art" style="background-image:url(assets/estados/thumb/${f.cc}.webp)"></div><p class="feat-t">${esc(nameOf(f.cc))}</p><p class="feat-d">${cap(voted(f.r, group()))}: <b>${one(f.r)}\u00a0%</b>.</p><button type="button" class="feat-go" data-cc="${f.cc}${t("text.36")}`;
 }
 function rotateFeatured() { clearInterval(featTimer); if (!reduced) featTimer = setInterval(() => { featIdx++; renderFeatured(); }, 9000); }
 
@@ -356,7 +373,7 @@ function buildControls() {
   renderLegend();
 }
 function renderLegend() {
-  $('#legend').innerHTML = `<b data-i18n="legend.title">${t('legend.title')}</b><div class="bar">${COLORS.map(c => `<i style="background:${c}"></i>`).join('')}</div><p class="legend-hint">${t('legend.hint')}</p><div class="ticks"><span></span>${EDGES.map(e => `<span>${e}</span>`).join('')}</div><div class="ends"><span data-i18n="legend.less">${t('legend.less')}</span><span class="nd" title="${esc(t('legend.noData'))}"><i></i><span data-i18n="legend.none">${t('legend.none')}</span></span><span data-i18n="legend.more">${t('legend.more')}</span></div>`;
+  $('#legend').innerHTML = `<b><span class="legend-title-long" data-i18n="legend.title">${t('legend.title')}</span><span class="legend-title-short" data-i18n="legend.short">${t('legend.short')}</span></b><div class="bar">${COLORS.map(c => `<i style="background:${c}"></i>`).join('')}</div><p class="legend-hint">${t('legend.hint')}</p><div class="ticks"><span></span>${EDGES.map(e => `<span>${e}</span>`).join('')}</div><div class="ends"><span data-i18n="legend.less">${t('legend.less')}</span><span class="nd" title="${esc(t('legend.noData'))}"><i></i><span data-i18n="legend.none">${t('legend.none')}</span></span><span data-i18n="legend.more">${t('legend.more')}</span></div>`;
 }
 function renderFilters() {
   for (const b of $('#sex').children) { b.textContent = SEX_LABEL[b.dataset.v]; b.setAttribute('aria-checked', String(b.dataset.v === S.sex)); }
@@ -392,7 +409,7 @@ function renderCaption() {
 function trait(kind, label, value, r, sub = '') {
   return `<li class="trait"><span class="t-ic">${icon(kind)}</span><span class="t-l">${label}${sub ? `<small>${sub}</small>` : ''}</span><span class="t-v">${value}</span>${r != null ? `<span class="t-bar"><i style="width:${Math.max(0, Math.min(100, r))}%"></i></span>` : ''}</li>`;
 }
-const pct = r => r == null ? '—' : one(r) + ' %';
+const pct = r => r == null ? '—' : one(r) + '\u00a0%';
 /* Cifra destacada de la ficha: número grande, comparación y pictograma, para leerse de un vistazo */
 const PERSON = 'M12 1a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13z M1 39V27a11 11 0 0 1 11-11a11 11 0 0 1 11 11v12z';
 function heroStat(r, ref, refName) {
@@ -548,8 +565,79 @@ function renderPresentBubble() {
   start(); requestAnimationFrame(placePresentBubble);
 }
 
+// Los módulos reciben el límite móvil sin cambiar los tiempos de escritorio.
+function mobileTiming(options) {
+  if (!narrow()) return options;
+  return { ...options, duration: reduced ? 0 : Math.min(options.duration || 0, 300), delay: 0 };
+}
+// La cabecera móvil vive fuera del contenido desplazable y conserva el foco de sus botones.
+function renderMobileNav() {
+  let nav = $('#sheet-nav');
+  const sheet = $('#detail');
+  if (!narrow() || S.mode !== 'map' || !(S.cc || S.region)) {
+    nav?.remove(); sheet.classList.remove('has-sheet-nav'); return;
+  }
+  if (!nav) {
+    nav = document.createElement('nav'); nav.id = 'sheet-nav'; nav.className = 'sheet-nav';
+    nav.innerHTML = '<button type="button" class="sheet-prev">‹</button><div class="sheet-nav-center" aria-live="polite" aria-atomic="true"></div><button type="button" class="sheet-next">›</button>';
+    $('.sheet-handle').after(nav);
+    nav.querySelector('.sheet-prev').addEventListener('click', () => { if (narrow()) S.mpio ? backToState() : step(-1); });
+    nav.querySelector('.sheet-next').addEventListener('click', () => { if (narrow() && !S.mpio) step(1); });
+  }
+  sheet.classList.add('has-sheet-nav');
+  const municipality = S.mpio && mpios.find(m => m.id === S.mpio);
+  const region = S.region && REGIONS.find(r => r.k === S.region);
+  const name = municipality ? municipality.n : S.cc ? nameOf(S.cc) : region.n;
+  const rate = municipality ? mpioCalc(municipality).r : S.cc ? calc(stateFlat(S.cc)).r : calc(regionFlat(S.region, S.year)).r;
+  const rank = S.cc && !S.mpio ? rankInfo(S.cc) : null;
+  const sub = rank ? t('nav.stateRank', { n: rank.n || '—', of: rank.of, rate: pct(rate) }) : municipality ? nameOf(S.cc) : pct(rate);
+  nav.querySelector('.sheet-prev').setAttribute('aria-label', t(S.mpio ? 'nav.backState' : 'nav.prevState'));
+  const next = nav.querySelector('.sheet-next'); next.hidden = !!S.mpio;
+  next.setAttribute('aria-label', t('nav.nextState'));
+  const center = nav.querySelector('.sheet-nav-center');
+  const markup = `<div class="sheet-nav-text"><strong role="heading" aria-level="1">${esc(name)}</strong><small>${esc(sub)}</small></div>`;
+  if (center.dataset.text !== markup) {
+    const old = center.querySelector('.sheet-nav-text')?.cloneNode(true);
+    center.dataset.text = markup; center.innerHTML = markup;
+    if (old && !reduced) {
+      old.classList.add('sheet-nav-out'); old.setAttribute('aria-hidden', 'true'); center.append(old);
+      old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150 }).finished.then(() => old.remove());
+      center.firstElementChild.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 });
+    }
+  }
+}
+// Se reorganizan nodos solo en móvil; el render de escritorio conserva su marcado.
+function compactMobileDetail(body) {
+  if (!narrow()) return;
+  const who = body.querySelector(':scope > .who');
+  if (!who) return;
+  const disclosure = document.createElement('details'); disclosure.className = 'who-m';
+  disclosure.innerHTML = `<summary>${t('who.title')}<span aria-hidden="true">⌄</span></summary>`;
+  who.before(disclosure); disclosure.append(who);
+  const chart = body.querySelector(':scope > .spark');
+  if (chart) chart.after(disclosure);
+  const more = body.querySelector(':scope > .more');
+  if (more) disclosure.after(more);
+}
+function compactMobileHome(body) {
+  if (!narrow()) return;
+  const blocks = [...body.querySelectorAll(':scope > .home-block')];
+  const carousel = document.createElement('div'); carousel.className = 'home-carousel';
+  carousel.setAttribute('role', 'region'); carousel.setAttribute('aria-label', t('home.carousel')); carousel.tabIndex = 0;
+  blocks[1].before(carousel);
+  blocks.slice(1, 4).forEach(block => carousel.append(block));
+  blocks[1].querySelector('p').textContent = t('home.challengeShort');
+  const insights = carousel.querySelector('.insights');
+  const more = document.createElement('details'); more.className = 'insights-more';
+  more.innerHTML = `<summary>${t('home.moreInsights')}</summary>`;
+  [...insights.children].slice(1).forEach(card => more.append(card)); insights.append(more);
+  const actions = blocks[4], disclosure = document.createElement('details'); disclosure.className = 'voting-m';
+  disclosure.innerHTML = `<summary>${t('fix.actions')}<span aria-hidden="true">⌄</span></summary>`;
+  actions.querySelector('h2').remove(); actions.before(disclosure); disclosure.append(actions);
+}
 function renderDetail() {
   const body = $('#detail-body'), y = S.year;
+  renderMobileNav();
   if (S.mode === 'home') {
     // Portada: cifra protagonista, tres hallazgos que llevan al mapa y un adelanto de 2027
     const nf = natFlat(2024), nat = calc(nf, 'todos', null).r, m = calc(nf, 'mujeres', null).r, h = calc(nf, 'hombres', null).r;
@@ -583,6 +671,7 @@ function renderDetail() {
           ${card(1, t('home.i2k'), t('home.i2t', { d: one(diff1(m, h)) }), pair(t('text.2'), m, t('text.3'), h))}
           ${card(2, t('home.i3k'), t('home.i3t', { d: one(diff1(old, calc(nf, 'todos', 0).r)) }), pair(t('text.65'), calc(nf, 'todos', 0).r, t('home.old'), old))}
         </div></section>${votingActions()}`;
+    compactMobileHome(body);
     return;
   }
   if (S.mpio && mpios.length) return renderMpioDetail(body);
@@ -614,6 +703,7 @@ function renderDetail() {
     <p class="d-note">${scope !== 'nat' ? t("text.75") : ''}${t("text.77")}${extra}
     ${actionsBar(scope === 'state')}`;
   body.querySelectorAll('.spark .pt').forEach(g => g.addEventListener('click', () => { stopPlay(); setYear(+g.dataset.y); }));
+  compactMobileDetail(body);
   bindWho(body);
 }
 function actionsBar(isState) {
@@ -630,7 +720,7 @@ function mpioBlock() {
     const shown = rows.map((x, i) => ({ ...x, rank: i + 1 })).filter(x => !q || norm(x.m.n).includes(q));
     if (S.order === 'asc') shown.reverse();
     list = `${t("text.85")}${S.order === 'desc'}${t("text.86")}${S.order === 'asc'}${t("text.87").replace(/Buscar municipio en este estado|Search municipalities in this state/g, t('fix.localSearch', { type: localTypes() }))}${esc(S.q)}"></div>
-      <ol class="m-list">${shown.map(x => `<li><button type="button" data-mpio="${x.m.id}" aria-current="${S.mpio === x.m.id}"><span class="n">${x.rank}</span><span class="nm">${esc(x.m.n)}<i style="width:${x.r}%"></i></span><span class="r">${one(x.r)} %</span></button></li>`).join('') || t("text.84")}</ol>`;
+      <ol class="m-list">${shown.map(x => `<li><button type="button" data-mpio="${x.m.id}" aria-current="${S.mpio === x.m.id}"><span class="n">${x.rank}</span><span class="nm">${esc(x.m.n)}<i style="width:${x.r}%"></i></span><span class="r">${one(x.r)}\u00a0%</span></button></li>`).join('') || t("text.84")}</ol>`;
   }
   return `<button type="button" class="list-toggle" data-act="list" aria-expanded="${S.list}"><span>${S.list ? t('fix.localHide', { type: localTypes() }) : t('fix.localList', { n: rows.length, type: localTypes() })}${t("text.91")}${esc(hi.m.n)}${t("text.92")}${esc(lo.m.n)}</small></button>${list}`;
 }
@@ -648,16 +738,17 @@ function renderMpioDetail(body) {
     <p class="d-meta">${chips.filter(c => c !== t("text.94")).join(' · ')}${now.b && now.b < 500 ? t("text.97") : ''}</p>
     ${heroStat(r, sr, esc(nameOf(S.cc)))}
 
-    ${ci ? `${t("text.99")}${one(ci[0])}–${one(ci[1])} %.</p>` : ''}
+    ${ci ? `${t("text.99")}${one(ci[0])}–${one(ci[1])}\u00a0%.</p>` : ''}
     ${whoVoted(m.y && m.y[y])}
     <details class="more"><summary>${t('who.more')}</summary><ul class="traits">${trait('vote', t("text.100"), fmt.format(now.s), null, t('detail.ofVoters', { n: fmt.format(now.b) }))}${ch != null ? trait('trending-up', `${t("text.67")}${py}`, signedPts(r, prev), null) : ''}${t("text.104")}${spark(yy => mpioCalc(m, yy).r, { ref: yy => calc(stateFlat(S.cc, yy)).r })}${t("text.105")}${esc(nameOf(S.cc))}${t("text.106")}${actionsBar(true)}
     ${mpioBlock()}`;
   body.querySelectorAll('.spark .pt').forEach(g2 => g2.addEventListener('click', () => { stopPlay(); setYear(+g2.dataset.y); }));
+  compactMobileDetail(body);
   bindWho(body);
 }
 function backToState() {
   const id = S.mpio; S.mpio = null; paintMpios(); renderDetail(); renderCaption(); writeHash();
-  setTimeout(() => ($(`#detail-body [data-mpio="${id}"]`) || $('#d-title'))?.focus({ preventScroll: true }), 40);
+  setTimeout(() => (narrow() ? $('.sheet-prev') : ($(`#detail-body [data-mpio="${id}"]`) || $('#d-title')))?.focus({ preventScroll: true }), 40);
 }
 function bindDetail() {
   const body = $('#detail-body');
@@ -687,8 +778,10 @@ function bindDetail() {
   });
   body.addEventListener('pointerleave', () => { const c = body.querySelector('.tcard'); if (c) { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); } }, true);
   $('#featured').addEventListener('click', e => { const b = e.target.closest('[data-cc]'); if (b) selectState(b.dataset.cc); });
-  $('.sheet-handle').addEventListener('click', () => { const open = $('#detail').classList.toggle('open'); $('.sheet-handle').setAttribute('aria-expanded', String(open)); });
-  $('#q')?.addEventListener('focus', () => { if (narrow()) $('#detail').classList.add('open'); });   // el teclado no tapa los resultados
+  mobileSheet = mountSheet({ isNarrow: narrow, onSwipe: dir => { if (narrow() && !S.mpio && (S.cc || S.region)) step(dir); }, sheet: $('#detail'), handle: $('.sheet-handle'), onChange: () => {
+    if (narrow() && S.mode === 'map') { mobileFlightDone?.(); mobileFlightDone = null; cancelAnimationFrame(raf); setView(targetView(activeBox())); }
+  } });
+  $('#q')?.addEventListener('focus', () => { if (narrow() && S.mode === 'map') mobileSheet?.set('full'); });   // el teclado no tapa los resultados
 }
 
 /* ---------- compartir, enlace, CSV, carta ---------- */
@@ -697,7 +790,7 @@ function viewText() {
   const reg = S.region && REGIONS.find(x => x.k === S.region);
   const r = m ? mpioCalc(m).r : S.cc ? calc(stateFlat(S.cc)).r : reg ? calc(regionFlat(reg.k)).r : natRate().r;
   const place = m ? `${m.n} (${nameOf(S.cc)})` : S.cc ? nameOf(S.cc) : reg ? reg.n : t('place.mexico');
-  return t('share.place', { place, voted: voted(r, t('with.id', { group: group() })), year: S.year, rate: pct(r).replace(' %', '') });
+  return t('share.place', { place, voted: voted(r, t('with.id', { group: group() })), year: S.year, rate: pct(r).replace('\u00a0%', '') });
 }
 async function doShare(text) {
   const url = publicURL() ? publicURL() + location.hash : '';
@@ -776,7 +869,7 @@ function cardModel(cc, extra = {}) {
     note: extra.score != null ? `${t("text.115")}${extra.score}${t("text.116")}${extra.badge}"` : null,
   };
 }
-function openCard(cc) { const d = $('#card-dialog'), host = $('#card-dialog-host'); host.replaceChildren(); renderCard(host, cardModel(cc)); d.showModal(); }
+function openCard(cc) { const d = $('#card-dialog'), host = $('#card-dialog-host'); host.replaceChildren(); renderCard(host, cardModel(cc), { motionTiming: mobileTiming }); d.showModal(); }
 function bindCardDialog() {
   const d = $('#card-dialog');
   d.addEventListener('click', e => {
@@ -785,7 +878,7 @@ function bindCardDialog() {
     const a = b.dataset.act;
     if (a === 'close' || a === 'mpios') d.close();
     else if (a === 'share') openShareSheet(viewShareSpec(`${viewText()}${t("text.117")}${nameOf(S.cc)}${t("text.118")}`), shareApi);
-    else if (a === 'prev' || a === 'next') { step(a === 'next' ? 1 : -1); setTimeout(() => renderCard($('#card-dialog-host'), cardModel(S.cc), { direction: a === 'next' ? 1 : -1 }), 30); }
+    else if (a === 'prev' || a === 'next') { step(a === 'next' ? 1 : -1); setTimeout(() => renderCard($('#card-dialog-host'), cardModel(S.cc), { direction: a === 'next' ? 1 : -1, motionTiming: mobileTiming }), 30); }
   });
 }
 
@@ -870,7 +963,7 @@ function mountHomeGlobe() {
     const PINS = [['31', -89.0, 20.7], ['02', -115.4, 30.6], ['09', -99.13, 19.43], ['14', -103.4, 20.6], ['19', -100.3, 25.7], ['07', -92.6, 16.7]];
     globe = mountGlobe($('#globe'), {
       theme: document.documentElement.dataset.theme, size: narrow() ? .27 : .42, mobile: narrow(), initialZoom: narrow() ? 1.3 : 1.2, minZoom: 1, maxZoom: 4, states: GEO, reducedMotion: reduced, colorOf: cc => solidFor(calc(stateFlat(cc, 2024), 'todos', null).r),
-      pins: PINS.map(([cc, lon, lat]) => { const r = calc(stateFlat(cc, 2024), 'todos', null).r; return { lon, lat, label: nameOf(cc), value: Math.round(r) + ' %', color: solidFor(r) }; }),
+      pins: PINS.map(([cc, lon, lat]) => { const r = calc(stateFlat(cc, 2024), 'todos', null).r; return { lon, lat, label: nameOf(cc), value: Math.round(r) + '\u00a0%', color: solidFor(r) }; }),
     });
   } catch (e) { console.warn(e); }
 }
@@ -883,6 +976,7 @@ function enterMap({ instant = false } = {}) {
   if (S.mode !== 'home') { refresh(); return Promise.resolve(); }
   if (entering) return entering;
   S.mode = 'map'; document.body.classList.remove('mode-home'); document.body.classList.add('mode-map', 'flying');
+  if (narrow()) mobileSheet?.set(S.cc ? 'half' : 'peek', { instant: true });
   setView(targetView(activeBox())); refresh();
   svg.style.opacity = '0';
   const fade = t => { if (t > .6) svg.style.opacity = String(Math.min(1, (t - .6) / .35)); };
@@ -931,23 +1025,23 @@ async function demoSteps() {
   const yb = calc(natFlat(2021), 'todos', 0), y60 = R(2021, 'todos', 3);
   const url = publicURL() || location.href.split('#')[0];
   return [
-    { id: 'hola', say: t('pixel.s1'), kicker: k(1), title: t("text.121"), gesture: 'wave', stat: { value: rounded(n24), suffix: ' %', decimals: 1, label: t("text.122"), color: C(n24) },
+    { id: 'hola', say: t('pixel.s1'), kicker: k(1), title: t("text.121"), gesture: 'wave', stat: { value: rounded(n24), suffix: '\u00a0%', decimals: 1, label: t("text.122"), color: C(n24) },
       viz: { type: 'picto', value: n24, of: 10, color: C(n24), caption: t('viz.picto', { n: Math.round(n24 / 10) }) },
       text: t("demo.hello", { p: one(n24), n: Math.round(n24 / 10) }), view: { ...base } },
-    { id: 'contraste', say: t('pixel.s2', { top: nameOf(top.cc), low: nameOf(low.cc), d: one(diff1(top.r, low.r)) }), kicker: k(2), title: t('demo.from', { a: nameOf(low.cc), b: nameOf(top.cc) }), gesture: 'point', stat: { value: rounded(top.r), suffix: ' %', decimals: 1, label: nameOf(top.cc), color: C(top.r) }, stat2: { value: rounded(low.r), suffix: ' %', decimals: 1, label: nameOf(low.cc), color: C(low.r) },
+    { id: 'contraste', say: t('pixel.s2', { top: nameOf(top.cc), low: nameOf(low.cc), d: one(diff1(top.r, low.r)) }), kicker: k(2), title: t('demo.from', { a: nameOf(low.cc), b: nameOf(top.cc) }), gesture: 'point', stat: { value: rounded(top.r), suffix: '\u00a0%', decimals: 1, label: nameOf(top.cc), color: C(top.r) }, stat2: { value: rounded(low.r), suffix: '\u00a0%', decimals: 1, label: nameOf(low.cc), color: C(low.r) },
       viz: { type: 'dumbbell', min: 40, max: 80, a: { label: nameOf(low.cc), value: rounded(low.r), color: C(low.r) }, b: { label: nameOf(top.cc), value: rounded(top.r), color: C(top.r) }, note: t('viz.gap', { n: one(diff1(top.r, low.r)) }) },
       text: t('demo.contrast', { top: nameOf(top.cc), low: nameOf(low.cc), share: share(low.r), y: one(calc(stateFlat(low.cc, 2021), 'todos', 0, 25).r) }), view: { ...base, spot: [top.cc, low.cc] } },
-    { id: 'mujeres', say: t('pixel.s3', { n: CODES.filter(cc => calc(stateFlat(cc, 2024), 'mujeres', null).r > calc(stateFlat(cc, 2024), 'hombres', null).r).length }), kicker: k(3), title: t("text.130"), gesture: 'point', stat: { value: rounded(m), suffix: ' %', decimals: 1, label: t('group.women'), color: C(m) }, stat2: { value: rounded(h), suffix: ' %', decimals: 1, label: t('group.men'), color: C(h) },
+    { id: 'mujeres', say: t('pixel.s3', { n: CODES.filter(cc => calc(stateFlat(cc, 2024), 'mujeres', null).r > calc(stateFlat(cc, 2024), 'hombres', null).r).length }), kicker: k(3), title: t("text.130"), gesture: 'point', stat: { value: rounded(m), suffix: '\u00a0%', decimals: 1, label: t('group.women'), color: C(m) }, stat2: { value: rounded(h), suffix: '\u00a0%', decimals: 1, label: t('group.men'), color: C(h) },
       viz: { type: 'line', min: 0, max: 12, unit: '', hi: '2024', points: [2012, 2018, 2024].map(y => ({ x: String(y), y: diff1(R(y, 'mujeres'), R(y, 'hombres')) })), caption: t('viz.genderGap') },
       text: t("demo.women", { g24: one(g24), g12: one(diff1(R(2012, "mujeres"), R(2012, "hombres"))) }), view: { ...base, sex: 'mujeres' } },
-    { id: 'jovenes', say: t('pixel.s4'), kicker: k(4), title: t("text.134"), gesture: 'crouch', stat: { value: rounded(R(2024, 'todos', 0)), suffix: ' %', decimals: 1, label: t("text.65"), color: C(R(2024, 'todos', 0)) }, stat2: { value: rounded(old), suffix: ' %', decimals: 1, label: t("text.66"), color: C(old) },
-      viz: { type: 'bars', max: 100, unit: ' %', items: ages, caption: t('viz.ages') },
+    { id: 'jovenes', say: t('pixel.s4'), kicker: k(4), title: t("text.134"), gesture: 'crouch', stat: { value: rounded(R(2024, 'todos', 0)), suffix: '\u00a0%', decimals: 1, label: t("text.65"), color: C(R(2024, 'todos', 0)) }, stat2: { value: rounded(old), suffix: '\u00a0%', decimals: 1, label: t("text.66"), color: C(old) },
+      viz: { type: 'bars', max: 100, unit: '\u00a0%', items: ages, caption: t('viz.ages') },
       text: t("demo.youth", { d: one(diff1(old, R(2024, "todos", 0))), hj: one(hj) }), view: { ...base, age: 0 } },
-    { id: 'intermedias', say: t('pixel.s5'), kicker: k(5), title: t("text.138"), gesture: 'point', stat: { value: rounded(n15), suffix: ' %', decimals: 1, label: t('mid.lbl', { y: 2015 }), color: C(n15) }, stat2: { value: rounded(n21), suffix: ' %', decimals: 1, label: t('mid.lbl', { y: 2021 }), color: C(n21) },
+    { id: 'intermedias', say: t('pixel.s5'), kicker: k(5), title: t("text.138"), gesture: 'point', stat: { value: rounded(n15), suffix: '\u00a0%', decimals: 1, label: t('mid.lbl', { y: 2015 }), color: C(n15) }, stat2: { value: rounded(n21), suffix: '\u00a0%', decimals: 1, label: t('mid.lbl', { y: 2021 }), color: C(n21) },
       viz: { type: 'line', min: 30, max: 80, hi: '2021', points: serie, caption: t('viz.series') },
       text: t('demo.mid2', { p15: one(n15), p21: one(n21), k: nUp }), view: { ...base, year: 2021, spot: d.filter(x => x.d > 0).map(x => x.cc) } },
-    { id: 'municipios', say: t('pixel.s6'), kicker: k(6), title: t("text.143"), gesture: 'crouch', dock: 'tl', ...(sm && bg ? { stat: { value: sm.part, suffix: ' %', decimals: 1, label: t("text.144"), color: C(sm.part) }, stat2: { value: bg.part, suffix: ' %', decimals: 1, label: t("text.145"), color: C(bg.part) } } : {}),
-      ...(HALL?.por_tamano ? { viz: { type: 'bars', max: 100, unit: ' %', caption: t('viz.size'), items: [['<10k', 'size.small'], ['10-75k', 'size.mid'], ['>75k', 'size.big']].map(([key, lk], i) => ({ label: t(lk), value: HALL.por_tamano[key].part, hi: i === 0, color: C(HALL.por_tamano[key].part) })) } } : {}),
+    { id: 'municipios', say: t('pixel.s6'), kicker: k(6), title: t("text.143"), gesture: 'crouch', dock: 'tl', ...(sm && bg ? { stat: { value: sm.part, suffix: '\u00a0%', decimals: 1, label: t("text.144"), color: C(sm.part) }, stat2: { value: bg.part, suffix: '\u00a0%', decimals: 1, label: t("text.145"), color: C(bg.part) } } : {}),
+      ...(HALL?.por_tamano ? { viz: { type: 'bars', max: 100, unit: '\u00a0%', caption: t('viz.size'), items: [['<10k', 'size.small'], ['10-75k', 'size.mid'], ['>75k', 'size.big']].map(([key, lk], i) => ({ label: t(lk), value: HALL.por_tamano[key].part, hi: i === 0, color: C(HALL.por_tamano[key].part) })) } } : {}),
       text: t('demo.localInvite') + (sm && bg ? `<p>${t('demo.localData', { n1: fmt.format(sm.n), n2: fmt.format(bg.n) })}</p>` : ''), view: { ...base, cc: '20' } },
     (() => {
       // Paso 7 dentro del mapa: simulador compacto, 3 estados resaltados, enlaces del INE y recomendaciones plegadas
@@ -1007,7 +1101,7 @@ async function startTour() {
   S.mode = 'demo'; document.body.classList.add('demoing'); refresh();
   const steps = await demoSteps();
   demo = startDemo($('#mission'), {
-    t, lang: locale, steps, stage: $('#stage'),
+    t, lang: locale, steps, motionTiming: mobileTiming, stage: $('#stage'),
     async show(v) {
       S.year = v.year ?? 2024; S.sex = v.sex ?? 'todos'; S.age = v.age ?? null; S.spot = v.spot || null;
       if (v.cc && S.cc !== v.cc) await selectState(v.cc, { keepRegion: true });
@@ -1040,16 +1134,16 @@ async function runTutorial() {
     steps: [
       { id: 'click', title: t('tut.1t'), text: t('tut.1'), target: () => gStates.querySelector('path[data-cc="09"]'),
         onEnter: () => { S.spot = ['09']; paintStates(); }, wait: () => S.cc === '09' },
-      { id: 'wheel', title: t('tut.2t'), text: narrow() ? t('tut.2m') : t('tut.2'), target: () => narrow() ? $('#strip') : $('#stage'),
-        onEnter: () => { S.spot = null; paintStates(); cc0 = S.cc; }, wait: () => !!S.cc && S.cc !== cc0 },
+      { id: 'wheel', title: t('tut.2t'), text: narrow() ? t('tut.2m') : t('tut.2'), target: () => narrow() ? $('#q') : $('#stage'),
+        onEnter: () => { if (narrow()) mobileSheet?.set('half'); S.spot = null; paintStates(); cc0 = S.cc; }, wait: () => !!S.cc && S.cc !== cc0 },
       { id: 'filter', title: t('tut.3t'), text: t('tut.3'), target: () => $('#detail .who'),
-        onEnter: () => { $('#detail').classList.add('open'); $('#detail .who')?.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }); },
+        onEnter: () => { if (narrow()) { mobileSheet?.set('full'); const who = $('#detail .who-m'); if (who) who.open = true; } else $('#detail').classList.add('open'); $('#detail .who')?.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }); },
         wait: () => S.sex !== 'todos' || S.age != null },
       { id: 'year', title: t('tut.4t'), text: t('tut.4'), target: () => $('.years'),
         onEnter: () => { y0 = S.year; }, wait: () => S.year !== y0 },
       { id: 'back', title: t('tut.5t'), text: t('tut.5'), target: () => $('#back-mx:not([hidden])'),
         onEnter: () => { if (!S.cc) selectState('09'); }, wait: () => !S.cc && !S.region },
-      { id: 'present', title: t('tut.6t'), text: t('tut.6'), target: () => $('#present') },
+      ...(!narrow() ? [{ id: 'present', title: t('tut.6t'), text: t('tut.6'), target: () => $('#present') }] : []),
     ],
     final: { title: t('tut.endT'), text: t('tut.end'), actions: [
       { label: t('final.game'), primary: true, onClick: () => startGame() },
@@ -1070,8 +1164,8 @@ function buildLevels(seed = Math.random() * 0x100000000) {
   const R = (y, sx = 'todos', ag = null) => calc(natFlat(y), sx, ag, 25).r;
   const st = (y, sx = 'todos', ag = null) => CODES.map(cc => ({ cc, r: calc(stateFlat(cc, y), sx, ag, 25).r })).filter(x => x.r != null).sort((a, b) => b.r - a.r);
   const base = { year: 2024, sex: 'todos', age: null, spot: null };
-  const slider = (q, r, view, extra = '') => ({ type: 'slider', q, answer: Math.max(1, Math.min(10, Math.round(r / 10))), countTo: rounded(r), before: { ...base, ...view, spot: null }, after: { ...base, ...view }, reveal: `${t("text.163")}${one(r)} %: ${word10(Math.round(r / 10))}${t("text.164")}${extra}` });
-  const mapQ = (q, list, view, tail) => ({ type: 'map', q, answer: list[0].cc, partial: [list[1].cc], before: { ...base, ...view, spot: null }, after: { ...base, ...view, spot: [list[0].cc] }, reveal: `${t("text.165")}${nameOf(list[0].cc)}: ${one(list[0].r)} %. ${tail(list)}` });
+  const slider = (q, r, view, extra = '') => ({ type: 'slider', q, answer: Math.max(1, Math.min(10, Math.round(r / 10))), countTo: rounded(r), before: { ...base, ...view, spot: null }, after: { ...base, ...view }, reveal: `${t("text.163")}${one(r)}\u00a0%: ${word10(Math.round(r / 10))}${t("text.164")}${extra}` });
+  const mapQ = (q, list, view, tail) => ({ type: 'map', q, answer: list[0].cc, partial: [list[1].cc], before: { ...base, ...view, spot: null }, after: { ...base, ...view, spot: [list[0].cc] }, reveal: `${t("text.165")}${nameOf(list[0].cc)}: ${one(list[0].r)}\u00a0%. ${tail(list)}` });
   const ch = (q, options, answer, view, reveal, bars) => ({ type: 'choice', q, options, answer, before: { ...base, ...view.before }, after: { ...base, ...view.after }, ...(view.after2 ? { after2: { view: { ...base, ...view.after2 }, delay: 900 } } : {}), reveal, ...(bars ? { bars } : {}) });
   const sliders = [
     () => slider(t("text.166"), R(2024), {}),
@@ -1082,9 +1176,9 @@ function buildLevels(seed = Math.random() * 0x100000000) {
     () => slider(t("text.173"), R(2009), { year: 2009 }, t("text.174")),
   ];
   const maps = [
-    () => mapQ(t("text.175"), st(2024), {}, l => `${t("text.176")}${nameOf(l[l.length - 1].cc)}, ${one(l[l.length - 1].r)} %.`),
-    () => { const l = st(2024).reverse(); return mapQ(t("text.177"), l, {}, () => `${t("text.178")}${nameOf(l[l.length - 1].cc)}, ${one(l[l.length - 1].r)} %.`); },
-    () => mapQ(t("text.179"), st(2021), { year: 2021 }, l => `${t("text.180")}${nameOf(l[1].cc)}, ${one(l[1].r)} %.`),
+    () => mapQ(t("text.175"), st(2024), {}, l => `${t("text.176")}${nameOf(l[l.length - 1].cc)}, ${one(l[l.length - 1].r)}\u00a0%.`),
+    () => { const l = st(2024).reverse(); return mapQ(t("text.177"), l, {}, () => `${t("text.178")}${nameOf(l[l.length - 1].cc)}, ${one(l[l.length - 1].r)}\u00a0%.`); },
+    () => mapQ(t("text.179"), st(2021), { year: 2021 }, l => `${t("text.180")}${nameOf(l[1].cc)}, ${one(l[1].r)}\u00a0%.`),
     () => mapQ(t("text.181"), st(2024, 'todos', 0), { age: 0 }, () => `${t("text.182")}${one(R(2024, 'todos', 0))}${t("text.183")}`),
     () => { const g = CODES.map(cc => ({ cc, r: diff1(calc(stateFlat(cc, 2024), 'mujeres', null).r, calc(stateFlat(cc, 2024), 'hombres', null).r) })).sort((a, b) => b.r - a.r); return { ...mapQ(t("text.184"), g, { sex: 'mujeres' }, () => ''), reveal: `${t("text.165")}${nameOf(g[0].cc)}${t("text.185")}${one(g[0].r)}${t("text.186")}${nameOf(g[g.length - 1].cc)}.` }; },
   ];
@@ -1093,10 +1187,10 @@ function buildLevels(seed = Math.random() * 0x100000000) {
     () => { const m = R(2024, 'mujeres'), h = R(2024, 'hombres'); return ch(t("text.187"), [{ id: 'm', label: t("text.2") }, { id: 'h', label: t("text.3") }], m > h ? 'm' : 'h', { before: {}, after: { sex: 'mujeres' } }, `${t("text.188")}${one(m)}${t("text.189")}${one(h)}${t("text.190")}`, [{ label: t("text.2"), value: rounded(m) }, { label: t("text.3"), value: rounded(h) }]); },
     () => { const gs = [['h0', t("text.46"), 'hombres', 0], ['m0', t("text.191"), 'mujeres', 0], ['h3', t("text.192"), 'hombres', 3], ['m1', t("text.193"), 'mujeres', 1]].map(([id, label, sx, ag]) => ({ id, label, sx, ag, r: R(2024, sx, ag) })); const lo = gs.slice().sort((a, b) => a.r - b.r)[0]; return ch(t("text.194"), gs.map(g => ({ id: g.id, label: g.label })), lo.id, { before: {}, after: { sex: lo.sx, age: lo.ag } }, `${lo.label}${t("text.195")}${one(lo.r)}${t("text.196")}`, gs.map(g => ({ label: g.label, value: rounded(g.r) }))); },
     () => { const a = R(2015), b = R(2021), k = CODES.filter(cc => calc(stateFlat(cc, 2021), 'todos', null).r > calc(stateFlat(cc, 2015), 'todos', null).r).length; return ch(t("text.197"), [{ id: 'up', label: t("text.198") }, { id: 'down', label: t("text.199") }], b > a ? 'up' : 'down', { before: { year: 2015 }, after: { year: 2015 }, after2: { year: 2021 } }, t('game.mid', { a: one(a), b: one(b), k })); },
-    () => { const ys = [2012, 2018, 2024].map(y => ({ id: String(y), label: String(y), r: R(y) })), top = ys.slice().sort((a, b) => b.r - a.r)[0]; return ch(t("text.204"), ys.map(y => ({ id: y.id, label: y.label })), top.id, { before: {}, after: { year: +top.id } }, `${t('game.in', { year: top.label })}${one(top.r)} %. ${ys.filter(y => y !== top).map(y => `${y.label}: ${one(y.r)} %`).join('; ')}.`, ys.map(y => ({ label: y.label, value: rounded(y.r) }))); },
-    () => { const opts = [regs[0], ...pickN(regs.slice(1), 3)]; return ch(t("text.205"), pickN(opts, 4).map(r => ({ id: r.k, label: r.n })), regs[0].k, { before: {}, after: { spot: regs[0].cc } }, `${t("text.206")}${regs[0].n}: ${one(regs[0].v)}${t("text.207")}${regs[regs.length - 1].n}, ${one(regs[regs.length - 1].v)} %.`); },
-    () => { const lo = regs[regs.length - 1], opts = [lo, ...pickN(regs.slice(0, -1), 3)]; return ch(t("text.208"), pickN(opts, 4).map(r => ({ id: r.k, label: r.n })), lo.k, { before: {}, after: { spot: lo.cc } }, `${t("text.206")}${lo.n}: ${one(lo.v)}${t("text.209")}${regs[0].n}, ${one(regs[0].v)} %.`); },
-    () => { const l = st(2024); let a, b; for (let i = 0; i < 50; i++) { [a, b] = pickN(l, 2); if (Math.abs(a.r - b.r) >= 5) break; } const w = a.r > b.r ? a : b; return ch(`${t("text.210")}${nameOf(a.cc)}${t("text.211")}${nameOf(b.cc)}?`, [{ id: a.cc, label: nameOf(a.cc) }, { id: b.cc, label: nameOf(b.cc) }], w.cc, { before: {}, after: { spot: [a.cc, b.cc] } }, `${nameOf(w.cc)}: ${one(w.r)}${t("text.212")}${one((w === a ? b : a).r)} %.`, [{ label: nameOf(a.cc), value: rounded(a.r) }, { label: nameOf(b.cc), value: rounded(b.r) }]); },
+    () => { const ys = [2012, 2018, 2024].map(y => ({ id: String(y), label: String(y), r: R(y) })), top = ys.slice().sort((a, b) => b.r - a.r)[0]; return ch(t("text.204"), ys.map(y => ({ id: y.id, label: y.label })), top.id, { before: {}, after: { year: +top.id } }, `${t('game.in', { year: top.label })}${one(top.r)}\u00a0%. ${ys.filter(y => y !== top).map(y => `${y.label}: ${one(y.r)}\u00a0%`).join('; ')}.`, ys.map(y => ({ label: y.label, value: rounded(y.r) }))); },
+    () => { const opts = [regs[0], ...pickN(regs.slice(1), 3)]; return ch(t("text.205"), pickN(opts, 4).map(r => ({ id: r.k, label: r.n })), regs[0].k, { before: {}, after: { spot: regs[0].cc } }, `${t("text.206")}${regs[0].n}: ${one(regs[0].v)}${t("text.207")}${regs[regs.length - 1].n}, ${one(regs[regs.length - 1].v)}\u00a0%.`); },
+    () => { const lo = regs[regs.length - 1], opts = [lo, ...pickN(regs.slice(0, -1), 3)]; return ch(t("text.208"), pickN(opts, 4).map(r => ({ id: r.k, label: r.n })), lo.k, { before: {}, after: { spot: lo.cc } }, `${t("text.206")}${lo.n}: ${one(lo.v)}${t("text.209")}${regs[0].n}, ${one(regs[0].v)}\u00a0%.`); },
+    () => { const l = st(2024); let a, b; for (let i = 0; i < 50; i++) { [a, b] = pickN(l, 2); if (Math.abs(a.r - b.r) >= 5) break; } const w = a.r > b.r ? a : b; return ch(`${t("text.210")}${nameOf(a.cc)}${t("text.211")}${nameOf(b.cc)}?`, [{ id: a.cc, label: nameOf(a.cc) }, { id: b.cc, label: nameOf(b.cc) }], w.cc, { before: {}, after: { spot: [a.cc, b.cc] } }, `${nameOf(w.cc)}: ${one(w.r)}${t("text.212")}${one((w === a ? b : a).r)}\u00a0%.`, [{ label: nameOf(a.cc), value: rounded(a.r) }, { label: nameOf(b.cc), value: rounded(b.r) }]); },
     () => { const y = R(2024, 'todos', 0), o = R(2024, 'todos', 3); return ch(t("text.213"), [{ id: 'y', label: t("text.214") }, { id: 'o', label: t("text.66") }], o > y ? 'o' : 'y', { before: {}, after: { age: 3 } }, `${t("text.215")}${one(o)}${t("text.212")}${one(y)}${t("text.216")}${one(diff1(o, y))}${t("text.217")}`, [{ label: t('age.young'), value: rounded(y) }, { label: t('age.old'), value: rounded(o) }]); },
     () => { const g09 = diff1(R(2012, 'mujeres'), R(2012, 'hombres')), g24 = diff1(R(2024, 'mujeres'), R(2024, 'hombres')); return ch(t("text.218"), [{ id: 'up', label: t("text.219") }, { id: 'down', label: t("text.220") }], g24 > g09 ? 'up' : 'down', { before: { year: 2012, sex: 'mujeres' }, after: { year: 2024, sex: 'mujeres' } }, `${g24 > g09 ? t("text.219") : t("text.220")}${t("text.221")}${one(g09)}${t("text.222")}${one(g24)}${t("text.223")}`); },
   ];
@@ -1112,7 +1206,7 @@ async function startGame() {
   if (mission || gameLoading) return;
   gameLoading = true;
   try {
-    const { startMission } = await import('./game.js?v=73');
+    const { startMission } = await import('./game.js?v=80');
     if (mission) return;
     let chosenCC = null;
     if (demo) endTour();
@@ -1139,7 +1233,7 @@ async function startGame() {
         el.innerHTML = t("text.226");
         return bindSearch(el.querySelector('#g-q'), el.querySelector('#g-res'), h => { chosenCC = h.cc; onPick({ cc: h.cc, name: nameOf(h.cc) }); });
       },
-      renderCard(el, cc, extra) { S.year = 2024; S.sex = 'todos'; S.age = null; S.spot = [cc]; refresh(); renderCard(el, cardModel(cc, extra || {})); },
+      renderCard(el, cc, extra) { S.year = 2024; S.sex = 'todos'; S.age = null; S.spot = [cc]; refresh(); renderCard(el, cardModel(cc, extra || {}), { motionTiming: mobileTiming }); },
       share: (text, res = {}) => {
         if ((res.score ?? 0) < 300) {
           const cc = res.cc && CODES.includes(res.cc) ? res.cc : chosenCC;
@@ -1181,13 +1275,95 @@ function showTip(e, html) {
   t.style.left = Math.min(Math.max(8, e.clientX - b.left + 16), b.width - w - 8) + 'px';
   t.style.top = Math.min(Math.max(8, e.clientY - b.top + 16), b.height - h - 8) + 'px';
 }
+// Gestos móviles comparten el estado view con los vuelos y los controles existentes.
+let mobileMapClickBlockedUntil = 0;
+function bindMobileMap() {
+  const pointers = new Map();
+  let base = null, fit = null, pinch = null, tap = null, tapTimer = 0, dispatching = false;
+  const enabled = () => narrow() && S.mode === 'map' && !document.body.matches('.presenting,.demoing,.gaming');
+  const point = e => ({ x: e.clientX, y: e.clientY });
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const midpoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const relative = p => { const r = svg.getBoundingClientRect(); return { x: (p.x - r.left) / r.width, y: (p.y - r.top) / r.height }; };
+  function apply(v) {
+    const w = Math.max(fit.w / 6, Math.min(fit.w, v.w)), h = w * fit.h / fit.w;
+    setView({ x: Math.max(fit.x, Math.min(fit.x + fit.w - w, v.x)), y: Math.max(fit.y, Math.min(fit.y + fit.h - h, v.y)), w, h, k: stage.clientWidth / w });
+  }
+  function begin() {
+    base = { ...view }; fit = targetView(activeBox());
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinch = { distance: distance(a, b), center: relative(midpoint(a, b)) };
+    } else pinch = null;
+  }
+  function emitTap(p) {
+    if (!enabled() || !p.target.isConnected) return;
+    dispatching = true; mobileMapClickBlockedUntil = 0;
+    p.target.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: p.x, clientY: p.y }));
+    dispatching = false;
+  }
+  // Solo los toques breves producen selección; se descartan los clics sintetizados tras arrastrar.
+  svg.addEventListener('click', e => {
+    if (enabled() && !dispatching && e.detail !== 0) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  svg.addEventListener('pointerdown', e => {
+    if (!enabled() || e.button !== 0 || pointers.size >= 2) return;
+    mobileFlightDone?.(); mobileFlightDone = null; cancelAnimationFrame(raf);
+    const p = { ...point(e), start: point(e), time: e.timeStamp, target: e.target, moved: false };
+    pointers.set(e.pointerId, p); svg.setPointerCapture(e.pointerId);
+    if (pointers.size > 1) { clearTimeout(tapTimer); tap = null; pointers.forEach(v => { v.moved = true; }); }
+    begin();
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!enabled() || !pointers.has(e.pointerId)) return;
+    e.preventDefault();
+    const p = pointers.get(e.pointerId); Object.assign(p, point(e));
+    if (distance(p, p.start) >= 8) { p.moved = true; clearTimeout(tapTimer); tap = null; }
+    if (pointers.size === 2 && pinch) {
+      const [a, b] = [...pointers.values()], center = relative(midpoint(a, b));
+      const factor = distance(a, b) / Math.max(1, pinch.distance);
+      const w = Math.max(fit.w / 6, Math.min(fit.w, base.w / factor)), h = w * fit.h / fit.w;
+      apply({ x: base.x + pinch.center.x * base.w - center.x * w, y: base.y + pinch.center.y * base.h - center.y * h, w });
+    } else if (p.moved && base.w < fit.w * .999) {
+      const r = svg.getBoundingClientRect();
+      apply({ x: base.x - (p.x - p.start.x) * base.w / r.width, y: base.y - (p.y - p.start.y) * base.h / r.height, w: base.w });
+    }
+  });
+  function end(e) {
+    const p = pointers.get(e.pointerId); if (!p) return;
+    pointers.delete(e.pointerId);
+    if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+    if (!enabled()) { pointers.clear(); return; }
+    if (e.type === 'pointerup' && !p.moved && distance(point(e), p.start) < 8 && e.timeStamp - p.time < 300) {
+      const now = performance.now();
+      if (tap && now - tap.time < 300 && distance(p, tap) < 30) {
+        clearTimeout(tapTimer); tap = null;
+        fit = targetView(activeBox()); const pos = relative(p);
+        const w = Math.max(fit.w / 6, view.w / 2), h = w * fit.h / fit.w;
+        apply({ x: view.x + pos.x * (view.w - w), y: view.y + pos.y * (view.h - h), w });
+      } else {
+        if (tap) { clearTimeout(tapTimer); emitTap(tap); }
+        tap = { ...p, time: now };
+        tapTimer = setTimeout(() => { const pending = tap; tap = null; if (pending) emitTap(pending); }, 300);
+      }
+    } else mobileMapClickBlockedUntil = performance.now() + 400;
+    if (pointers.size) {
+      pointers.forEach(v => { v.start = point({ clientX: v.x, clientY: v.y }); v.moved = true; }); begin();
+    }
+  }
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', end);
+  narrowMq.addEventListener('change', () => { pointers.clear(); clearTimeout(tapTimer); tap = null; });
+}
+
 function bindMap() {
+  bindMobileMap();
   svg.addEventListener('pointermove', e => {
     if (e.pointerType === 'touch' || S.mode === 'home') return;
     const p = e.target.closest('path'); if (!p) { $('#tooltip').hidden = true; return; }
     if (p.parentNode === gMpios) {
       const m = mpios[+p.dataset.i], c = mpioCalc(m), r = c.r, ref = calc(stateFlat(S.cc)).r, ci = c.b && c.b < 2000 ? wilson(c.s, c.b) : null;
-      showTip(e, `<strong>${esc(m.n)}</strong>${r == null ? t("text.227") : `<b>${one(r)}</b><span>%</span><small>${diffText(r, ref, t("text.228"))}${ci ? `${t("text.229")}${one(ci[0])}–${one(ci[1])} %` : ''}</small>`}`);
+      showTip(e, `<strong>${esc(m.n)}</strong>${r == null ? t("text.227") : `<b>${one(r)}</b><span>%</span><small>${diffText(r, ref, t("text.228"))}${ci ? `${t("text.229")}${one(ci[0])}–${one(ci[1])}\u00a0%` : ''}</small>`}`);
     } else {
       const cc = p.dataset.cc, r = calc(stateFlat(cc)).r, ref = natRate().r;
       showTip(e, `<strong>${esc(nameOf(cc))}</strong>${r == null ? t("text.227") : `<b>${one(r)}</b><span>%</span><small>${diffText(r, ref, t("text.52"))}</small>`}`);
@@ -1196,6 +1372,7 @@ function bindMap() {
   stage.addEventListener('pointerleave', () => { $('#tooltip').hidden = true; });
   svg.addEventListener('pointerleave', () => { $('#tooltip').hidden = true; });
   svg.addEventListener('click', e => {
+    if (narrow() && mobileMapClickBlockedUntil > performance.now()) { e.preventDefault(); return; }
     const p = e.target.closest('path'); $('#tooltip').hidden = true;
     if (!p) return;
     if (picker && p.dataset.cc) { picker(p.dataset.cc); return; }
@@ -1233,6 +1410,11 @@ function bindMap() {
     if (e.key !== 'Escape') return;
     // El diálogo conserva su cierre nativo y protege las capas inferiores.
     if (document.querySelector('dialog[open]')) { e.stopImmediatePropagation(); return; }
+    if (narrow() && S.mode === 'map' && !document.body.classList.contains('presenting') && !tut && !demo && !mission) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      $('#filters').hidden = true; $('#filters-btn').setAttribute('aria-expanded', 'false');
+      mobileSheet?.set('peek'); return;
+    }
     if (!document.body.classList.contains('presenting') || tut || demo || mission) return;
     e.preventDefault(); e.stopImmediatePropagation();
     setPresent(false);
@@ -1255,6 +1437,7 @@ function bindMap() {
     const openMenu = document.querySelector('details.menu[open]');
     if (e.key === 'Escape' && openMenu) { openMenu.open = false; openMenu.querySelector('summary').focus(); return; }
     if (e.key === 'Escape') {
+      if (narrow() && S.mode === 'map') { mobileSheet?.set('peek'); return; }
       if (!$('#filters').hidden) { $('#filters').hidden = true; $('#filters-btn').focus(); }
       else if (S.mpio) backToState(); else if (S.cc) selectState(null, { keepRegion: true }); else if (S.region) selectRegion(S.region);
     } else if (S.cc && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !t.closest('#strip')) step(e.key === 'ArrowRight' ? 1 : -1);
@@ -1305,7 +1488,7 @@ async function start() {
     bindSearch($('#q'), $('#q-results'), h => goTo({ cc: h.cc, id: h.id || null }));
     $('#loading').remove();
     if (deep) {
-      S.mode = 'map'; document.body.classList.replace('mode-home', 'mode-map'); setView(targetView(activeBox())); refresh();
+      S.mode = 'map'; document.body.classList.replace('mode-home', 'mode-map'); if (narrow()) mobileSheet?.set('peek', { instant: true }); setView(targetView(activeBox())); refresh();
       if (initial.cc) { await selectState(initial.cc, { instant: true, keepRegion: true }); if (initial.m) selectMpio(initial.m, { focus: false }); }
     } else { setView(targetView(natBox())); paintStates(); mountHomeGlobe(); renderAll(); }
     rotateFeatured();
@@ -1343,7 +1526,7 @@ function bindPreferences() {
     try {
       const transition = document.startViewTransition(update);
       await transition.ready;
-      document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] }, { duration: 420, easing: 'ease-out', pseudoElement: '::view-transition-new(root)' });
+      document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] }, { duration: narrow() ? 300 : 420, easing: 'ease-out', pseudoElement: '::view-transition-new(root)' });
     } catch { update(); }
   });
   $('#lang-toggle').addEventListener('click', () => setLang(lang() === 'es' ? 'en' : 'es'));
@@ -1354,7 +1537,7 @@ function bindPreferences() {
     renderLegend(); refresh(); renderDetail(); renderCaption();
     $('#tooltip').hidden = true;
     $('#q').dispatchEvent(new Event('input'));
-    if ($('#card-dialog').open && S.cc) renderCard($('#card-dialog-host'), cardModel(S.cc));
+    if ($('#card-dialog').open && S.cc) renderCard($('#card-dialog-host'), cardModel(S.cc), { motionTiming: mobileTiming });
     if (mission) mission.setLanguage(buildLevels(gameSeed));
     if (demo) demoSteps().then(steps => demo?.setSteps(steps));
   });

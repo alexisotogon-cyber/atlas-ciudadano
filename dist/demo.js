@@ -1,3 +1,5 @@
+import { icon as svgIcon } from './icons.js?v=80';
+
 // Recorrido narrado por Pixel; la aplicación conserva el control del mapa.
 export function startDemo(host, api) {
   const t = (key, fallback) => {
@@ -12,6 +14,9 @@ export function startDemo(host, api) {
   const doc = host.ownerDocument;
   const win = doc.defaultView;
   let steps = api.steps;
+  const narrow = win.matchMedia('(max-width: 860px)');
+  let direction = 1;
+  let storyBar = null;
   const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
   const cleanups = [];   // temporizadores y animaciones de cada paso
   const runCleanups = () => { while (cleanups.length) { try { cleanups.pop()(); } catch { /* ya limpio */ } } };
@@ -67,7 +72,9 @@ export function startDemo(host, api) {
     if (!stagePixel || destroyed) return;
     const stageRect = api.stage.getBoundingClientRect();
     const sheetRect = dock.getBoundingClientRect();
-    const overlap = win.matchMedia('(max-width: 860px)').matches && !stagePixel.hidden
+    if (narrow.matches) dock.style.setProperty('--demo-stage-height', `${stageRect.height}px`);
+    else dock.style.removeProperty('--demo-stage-height');
+    const overlap = narrow.matches && !stagePixel.hidden
       ? Math.max(0, stageRect.bottom - Math.max(stageRect.top, sheetRect.top)) : 0;
     stagePixel.style.setProperty('--demo-sheet-overlap', `${overlap}px`);
   }
@@ -77,6 +84,43 @@ export function startDemo(host, api) {
     stageObserver?.observe(api.stage);
     win.addEventListener('resize', positionStagePixel);
   }
+
+  // Las siete marcas viven en el escenario y desaparecen en el cierre.
+  function updateStoryBar(step) {
+    if (!narrow.matches || !api.stage) { storyBar?.remove(); storyBar = null; return; }
+    if (!storyBar) {
+      storyBar = element('div', 'demo-story-bar');
+      storyBar.setAttribute('aria-hidden', 'true');
+      for (let i = 0; i < 7; i++) storyBar.append(element('span', 'demo-story-segment'));
+      api.stage.append(storyBar);
+    }
+    storyBar.hidden = step.layout === 'final';
+    [...storyBar.children].forEach((node, i) => node.classList.toggle('is-filled', i <= index));
+  }
+
+  // El desplazamiento vertical conserva prioridad sobre el cambio de historia.
+  let swipe = null;
+  dock.addEventListener('pointerdown', event => {
+    if (!narrow.matches || event.isPrimary === false || event.button !== 0 ||
+        displayed?.layout === 'final' || event.target.closest('button, a, input, select, textarea, summary, [role="slider"], [contenteditable]')) return;
+    swipe = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    dock.setPointerCapture(event.pointerId);
+  });
+  dock.addEventListener('pointercancel', () => { swipe = null; });
+  dock.addEventListener('pointerup', event => {
+    const start = swipe; swipe = null;
+    if (!narrow.matches || !start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x, dy = event.clientY - start.y;
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) {
+      if (dx < 0) dock.querySelector('.demo-actions .demo-button--primary')?.click();
+      else go(index - 1);
+    }
+  });
+
+  function onWidthChange() {
+    if (!destroyed && index >= 0) { cancelMotion(); render(steps[index], displayed); }
+  }
+  narrow.addEventListener('change', onWidthChange);
 
   function renderStageSpeech(step, first) {
     if (!stagePixel) return;
@@ -108,7 +152,7 @@ export function startDemo(host, api) {
 
   function animate(node, keyframes, options) {
     if (motion.matches || !node || typeof node.animate !== 'function') return;
-    const animation = node.animate(keyframes, options);
+    const animation = node.animate(keyframes, api.motionTiming ? api.motionTiming(options) : options);
     animations.add(animation);
     animation.finished.then(() => {
       // Liberamos también los efectos persistentes de las transiciones terminadas.
@@ -126,9 +170,14 @@ export function startDemo(host, api) {
     animations.clear();
   }
 
-  function button(text, kind, action) {
+  function button(text, kind, action, iconName = null) {
     const node = element('button', `demo-button demo-button--${kind}`, text);
     node.type = 'button';
+    if (iconName) {
+      const label = element('span', 'demo-button-label', text);
+      node.replaceChildren(label);
+      node.insertAdjacentHTML(iconName === 'chevron-left' ? 'afterbegin' : 'beforeend', svgIcon(iconName));
+    }
     node.addEventListener('click', action);
     return node;
   }
@@ -231,7 +280,7 @@ export function startDemo(host, api) {
         row.style.setProperty('--row-color', item.color || 'var(--accent)');
         const header = element('div', 'demo-gap2-header');
         const value = element('span', 'demo-gap2-value');
-        const describe = n => `${(viz.ofTen || '{n} de 10').replace('{n}', filled(n))} · ${one(n)} %`;
+        const describe = n => `${(viz.ofTen || '{n} de 10').replace('{n}', filled(n))} · ${one(n)}\u00a0%`;
         value.textContent = describe(item.value);
         header.append(element('span', 'demo-gap2-label', item.label), value);
         const people = element('div', 'demo-gap2-people');
@@ -508,7 +557,7 @@ export function startDemo(host, api) {
         const track = element('span', 'demo-ranking-track');
         const bar = element('span', 'demo-ranking-bar'); bar.style.width = `${Math.max(0, Math.min(100, Number(item.value) / ref * 100))}%`; if (item.color) bar.style.setProperty('--c', item.color); track.append(bar);   // la línea al final = referencia
         const fmt1 = v => Math.abs(v).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        const value = element('span', 'demo-ranking-value', `${fmt1(Number(item.value))} %`);
+        const value = element('span', 'demo-ranking-value', `${fmt1(Number(item.value))}\u00a0%`);
         // Diferencia exacta, calculada antes de redondear (Durango: −9.0, no −8.9)
         const d = Number(item.exact ?? item.value) - ref; value.append(element('small', 'demo-ranking-delta', `${d < 0 ? '−' : '+'}${fmt1(d)} pts`));
         row.append(element('span', 'demo-ranking-name', item.name), track, value);
@@ -538,7 +587,9 @@ export function startDemo(host, api) {
         const icon = element('span', 'demo-action-icon'); icon.setAttribute('aria-hidden', 'true');
         // Los iconos SVG proceden de la API confiable de la aplicación.
         if (api.icon && action.icon) icon.innerHTML = api.icon(action.icon) || '';
-        link.append(icon, element('span', '', action.label), element('span', 'demo-action-arrow', '↗')); panel.append(link);
+        const arrow = element('span', 'demo-action-arrow');
+        arrow.innerHTML = svgIcon('chevron-right');
+        link.append(icon, element('span', '', action.label), arrow); panel.append(link);
       }
       if (item.extra) panel.append(element('p', 'demo-final-note', item.extra));
       for (const recommendation of item.items || []) {
@@ -578,6 +629,7 @@ export function startDemo(host, api) {
     runCleanups();
     content.replaceChildren();
     const final = step.layout === 'final';
+    updateStoryBar(step);
     dock.classList.toggle('demo-dock--final', final);
     dock.classList.toggle('demo-dock--top', !final && step.dock === 'tl');
     bubble.className = final ? 'demo-final' : 'demo-bubble';
@@ -642,7 +694,8 @@ export function startDemo(host, api) {
         link.href = item.href; link.target = '_blank'; link.rel = 'noopener';
         const icon = element('span', 'demo-step-link-icon'); icon.setAttribute('aria-hidden', 'true');
         if (api.icon && item.icon) icon.innerHTML = api.icon(item.icon) || '';
-        const arrow = element('span', 'demo-step-link-arrow', '↗'); arrow.setAttribute('aria-hidden', 'true');
+        const arrow = element('span', 'demo-step-link-arrow'); arrow.setAttribute('aria-hidden', 'true');
+        arrow.innerHTML = svgIcon('chevron-right');
         link.append(icon, element('span', 'demo-step-link-label', item.label), arrow);
         links.append(link);
       }
@@ -693,19 +746,25 @@ export function startDemo(host, api) {
       progress.append(segment);
     });
     const actions = element('div', 'demo-actions');
-    const back = button(t("text.271", "‹ Anterior"), 'ghost', () => go(index - 1));
+    const back = button(t("text.271", "Anterior"), 'ghost', () => go(index - 1), 'chevron-left');
     back.disabled = index === 0;
     const last = index === steps.length - 1;
-    const next = button(step.buttons?.next?.label ?? (last ? t("text.272", "Explorar por mi cuenta") : t("text.273", "Siguiente ›")), 'primary',
-      () => step.buttons?.next ? end(step.buttons.next.mode) : last ? end('explore') : go(index + 1));
+    const next = button(step.buttons?.next?.label ?? (last ? t("text.272", "Explorar por mi cuenta") : t("text.273", "Siguiente")), 'primary',
+      () => step.buttons?.next ? end(step.buttons.next.mode) : last ? end('explore') : go(index + 1), 'chevron-right');
     actions.append(back, next);
     if (last && !step.buttons) actions.append(button(t("text.274", "Jugar Misión 2027"), 'ghost', () => end('game')));
     actions.append(button(step.buttons?.skip?.label ?? t("text.275", "Saltar recorrido"), 'skip',
       () => end(step.buttons?.skip ? step.buttons.skip.mode : 'skip')));
     footer.append(progress, actions);
     content.append(footer);
+    if (narrow.matches) {
+      const body = element('div', 'demo-story-content');
+      body.append(...[...content.children].filter(node => node !== footer));
+      content.prepend(body);
+    }
+    positionStagePixel();
     const newRect = bubble.getBoundingClientRect();
-    if (!first && previous?.layout !== 'final' && step.dock !== previous?.dock) animate(dock, [{ transform: `translateY(${oldRect.top - newRect.top}px)` }, { transform: 'translateY(0)' }], { duration: 300, easing: 'ease-out' });
+    if (!narrow.matches && !first && previous?.layout !== 'final' && step.dock !== previous?.dock) animate(dock, [{ transform: `translateY(${oldRect.top - newRect.top}px)` }, { transform: 'translateY(0)' }], { duration: 300, easing: 'ease-out' });
 
     // La región viva anuncia únicamente el título y la primera oración.
     const plain = (prose.textContent || '').trim();
@@ -713,17 +772,14 @@ export function startDemo(host, api) {
     live.textContent = `${step.title || ''}${sentence ? `. ${sentence}` : ''}`;
     displayed = step;
     next.focus({ preventScroll: true });
-    if (step.id === '2027' && win.matchMedia('(max-width: 860px)').matches) {
-      // Esperamos al diseño para mostrar el botón dentro del panel desplazable.
-      const scrollFrame = win.requestAnimationFrame(() => {
-        content.querySelector('.demo-button--gap2')?.scrollIntoView({ block: 'nearest', behavior: motion.matches ? 'instant' : 'smooth' });
-      });
-      cleanups.push(() => win.cancelAnimationFrame(scrollFrame));
-    }
 
     if (motion.matches) return;
     mascotMotion(step, first);
-    animate(content, [
+    if (narrow.matches) {
+      animate(content.querySelector('.demo-story-content'), [
+        { transform: `translateX(${direction * 24}px)`, opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }
+      ], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    } else animate(content, [
       { transform: 'translateY(8px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }
     ], { duration: 220, easing: 'ease-out' });
 
@@ -745,12 +801,15 @@ export function startDemo(host, api) {
     if (destroyed || !Number.isInteger(i) || i < 0 || i >= steps.length || i === index) return;
     const previous = displayed;
     cancelMotion();
+    if (narrow.matches) direction = i < index ? -1 : 1;
     index = i;
     const step = steps[index];
     // El movimiento del mapa y la aparición del diálogo son independientes.
-    show(step.view);
+    // En celular el encuadre depende de la altura de la tarjeta: primero se dibuja y luego se mueve el mapa
+    if (!narrow.matches) show(step.view);
     if (destroyed || index !== i) return;
-    if (!displayed || motion.matches) render(step, previous);
+    if (narrow.matches) { render(step, previous); positionStagePixel(); win.requestAnimationFrame(() => { if (!destroyed && index === i) show(step.view); }); }
+    else if (!displayed || motion.matches) render(step, previous);
     else {
       animate(pop, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(.9)' }], { duration: 120, fill: 'forwards', easing: 'ease-out' });
       animate(content, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' });
@@ -789,6 +848,8 @@ export function startDemo(host, api) {
     stageObserver?.disconnect();
     win.removeEventListener('resize', positionStagePixel);
     stagePixel?.remove();
+    storyBar?.remove();
+    narrow.removeEventListener('change', onWidthChange);
     dock.remove();
     if (!hadClass) host.classList.remove('demo');
     if (ownedFocus && previousFocus?.isConnected) previousFocus.focus?.({ preventScroll: true });

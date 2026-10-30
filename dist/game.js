@@ -1,3 +1,5 @@
+import { icon } from './icons.js?v=80';
+
 // Misión 2027: toda la partida vive en memoria y usa los datos de la aplicación.
 export function startMission(host, api) {
   const translations = new Map();
@@ -9,6 +11,9 @@ export function startMission(host, api) {
   const { states } = api;
   const doc = host.ownerDocument;
   const win = doc.defaultView;
+  const narrow = win.matchMedia('(max-width: 860px)');
+  let questionAnimation = null;
+  const mobileActions = new Map();
   const motion = win.matchMedia('(prefers-reduced-motion: reduce)');
   const previousFocus = doc.activeElement;
   const timers = new Set();
@@ -35,9 +40,13 @@ export function startMission(host, api) {
     if (text !== undefined) node.textContent = text;
     return node;
   };
-  const button = (text, action, className = '') => {
+  const button = (text, action, className = '', iconName = null) => {
     const node = el('button', `mission__button ${className}`, text);
     node.type = 'button';
+    if (iconName) {
+      node.replaceChildren(el('span', 'mission__button-label', text));
+      node.insertAdjacentHTML('beforeend', icon(iconName));
+    }
     node.addEventListener('click', action);
     return node;
   };
@@ -59,6 +68,8 @@ export function startMission(host, api) {
     frames.add(id);
   };
   const clearWork = () => {
+    questionAnimation?.cancel();
+    questionAnimation = null;
     generation++;
     timers.forEach(id => win.clearTimeout(id));
     frames.forEach(id => win.cancelAnimationFrame(id));
@@ -114,7 +125,7 @@ export function startMission(host, api) {
     soundButton.setAttribute('aria-label', sound ? t('game.soundMute', 'Silenciar') : t('text.238', 'Activar sonido'));
   }
   updateSound();
-  const exitButton = button(t("text.239", "Salir ✕"), end, 'mission__exit');
+  const exitButton = button(t("text.239", "Salir"), end, 'mission__exit', 'x');
   tools.append(stars, soundButton, exitButton);
   hud.append(logo, progress, tools);
   const panel = el('section', 'mission__panel');
@@ -138,6 +149,45 @@ export function startMission(host, api) {
   host.style.setProperty('position', 'absolute');
   host.style.setProperty('inset', '0');
   host.style.setProperty('pointer-events', 'none');
+
+  // Solo en móvil se separa la zona desplazable del pie siempre visible.
+  function layoutMobilePanel(enter = false) {
+    if (destroyed) return;
+    const oldBody = panel.querySelector(':scope > .mission__body');
+    if (oldBody) oldBody.replaceWith(...oldBody.childNodes);
+    for (const [action, marker] of mobileActions) {
+      if (marker.isConnected) marker.replaceWith(action);
+    }
+    mobileActions.clear();
+    panel.querySelectorAll('[data-mobile-footer]').forEach(node => node.remove());
+    panel.classList.remove('mission__panel--map');
+    if (!narrow.matches) return;
+    panel.classList.toggle('mission__panel--map', levels?.[level]?.type === 'map' && phase === 'answer');
+    // La invitación conserva «Empezar» antes de «Ahora no» en el mismo grupo.
+    const action = phase === 'invite' ? null : panel.querySelector('.mission__submit:not([hidden]), .mission__primary:not([hidden])');
+    if (action && !action.closest('.mission__footer')) {
+      const marker = doc.createComment('Acción en su posición original de escritorio');
+      action.replaceWith(marker);
+      mobileActions.set(action, marker);
+      const footer = el('footer', 'mission__footer');
+      footer.dataset.mobileFooter = '';
+      footer.append(action);
+      panel.append(footer);
+    }
+    const body = el('div', 'mission__body');
+    body.append(...[...panel.childNodes].filter(node => !node.classList?.contains('mission__footer')));
+    panel.prepend(body);
+    if (enter && !motion.matches && typeof body.animate === 'function') {
+      questionAnimation?.cancel();
+      questionAnimation = body.animate([
+        { transform: 'translateX(24px)', opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }
+      ], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    }
+  }
+  const onWidthChange = () => layoutMobilePanel();
+  const onMotionChange = () => { if (narrow.matches && motion.matches) questionAnimation?.cancel(); };
+  narrow.addEventListener('change', onWidthChange);
+  motion.addEventListener('change', onMotionChange);
 
   function blip(kind) {
     if (!sound || !audio || audio.state !== 'running') return;
@@ -186,6 +236,7 @@ export function startMission(host, api) {
     heading.id = `mission-question-${Math.random().toString(36).slice(2)}`;
     panel.setAttribute('aria-labelledby', heading.id);
     panel.append(heading, controls);
+    if (narrow.matches) layoutMobilePanel(true);
     heading.focus({ preventScroll: true });
   }
 
@@ -223,7 +274,10 @@ export function startMission(host, api) {
     feedback.append(el('strong', '', points === 100 ? `${t('game.correct', '¡Correcto!')} +100`
       : points > 0 ? `${t('game.almost', 'Casi')}: +${points}` : t('game.wrong', 'No esta vez')));
     const explanation = el('div', 'mission__reveal');
-    panel.append(feedback, explanation);
+    if (narrow.matches) {
+      panel.classList.remove('mission__panel--map');
+      (panel.querySelector('.mission__body') || panel).append(feedback, explanation);
+    } else panel.append(feedback, explanation);
     const spec = levels[level];
     if (spec.type === 'map') {
       const correct = t('game.correct', '¡Correcto!').replace(/^[¡!]+|[¡!]+$/g, '');
@@ -235,10 +289,11 @@ export function startMission(host, api) {
     feedback.focus({ preventScroll: true });
     const delay = reveal(explanation);
     later(() => {
-      const next = button(t("text.250", "Siguiente ▸"), () => { level++; renderLevel(); }, 'mission__next');
+      const next = button(t("text.250", "Siguiente"), () => { level++; renderLevel(); }, 'mission__next', 'chevron-right');
       const footer = el('footer', 'mission__footer');
       footer.append(next);
       panel.append(footer);
+      if (narrow.matches) layoutMobilePanel();
       next.focus({ preventScroll: true });
     }, motion.matches ? 0 : (delay ?? 900));
   }
@@ -250,25 +305,25 @@ export function startMission(host, api) {
         const counter = el('p');
         counter.setAttribute('aria-hidden', 'true');
         container.append(counter);
-        animateValue(value => { counter.textContent = `${number(value)} %`; }, spec.countTo);
+        animateValue(value => { counter.textContent = `${number(value)}\u00a0%`; }, spec.countTo);
       }
       (spec.bars || []).forEach(bar => {
         const row = el('div', 'mission__bar-row');
-        row.append(el('span', '', `${bar.label}: ${number(bar.value)} %`));
+        row.append(el('span', '', `${bar.label}: ${number(bar.value)}\u00a0%`));
         const track = el('div', 'mission__bar-track');
         track.setAttribute('aria-hidden', 'true');
         const fill = el('span', 'mission__bar-fill');
         track.append(fill); row.append(track); container.append(row);
         animateValue(value => { fill.style.width = `${Math.max(0, Math.min(100, value))}%`; }, bar.value);
         const scale = el('div', 'mission__bar-scale');
-        scale.append(el('span', '', '0 %'), el('span', '', '100 %'));
+        scale.append(el('span', '', '0\u00a0%'), el('span', '', '100\u00a0%'));
         row.append(scale);
       });
     };
     // La explicación aparece de inmediato, incluso durante la transición del mapa.
     const why = el('p', 'mission__why');
     why.append(el('strong', '', t('game.why', 'Por qué:')), doc.createTextNode(' '),
-      el('span', '', spec.reveal || (spec.bars || []).map(bar => `${bar.label}: ${number(bar.value)} %`).join(' · ') || answerText(spec)));
+      el('span', '', spec.reveal || (spec.bars || []).map(bar => `${bar.label}: ${number(bar.value)}\u00a0%`).join(' · ') || answerText(spec)));
     container.append(why);
     if (spec.after2) {
       const secondStep = () => { api.show(spec.after2); reveal(); };
@@ -467,7 +522,7 @@ export function startMission(host, api) {
     const summary = el('ul', 'mission__summary');
     levels.forEach((spec, index) => {
       const row = el('li', results[index]?.correct ? 'is-correct' : 'is-wrong');
-      const value = spec.countTo !== undefined ? `${number(spec.countTo)} %` : answerText(spec);
+      const value = spec.countTo !== undefined ? `${number(spec.countTo)}\u00a0%` : answerText(spec);
       const text = `${spec.q} · ${value}`;
       const line = el('span', 'mission__summary-text');
       line.append(el('span', 'mission__summary-question', spec.q), el('strong', 'mission__summary-answer', ` · ${value}`));
@@ -490,8 +545,9 @@ export function startMission(host, api) {
         icon.innerHTML = action.icon;
         link.append(icon);
       }
-      const arrow = el('span', 'mission__action-arrow', '↗');
+      const arrow = el('span', 'mission__action-arrow');
       arrow.setAttribute('aria-hidden', 'true');
+      arrow.innerHTML = icon('chevron-right');
       link.append(el('span', '', action.label), arrow);
       actionSection.append(link);
     });
@@ -507,6 +563,7 @@ export function startMission(host, api) {
       renderLevel();
     }));
     overlay.append(actions);
+    if (narrow.matches) layoutMobilePanel();
     share.focus({ preventScroll: true });
   }
 
@@ -526,6 +583,7 @@ export function startMission(host, api) {
     const controls = el('div', 'mission__controls');
     controls.append(start, dismiss);
     panel.replaceChildren(title, text, controls);
+    if (narrow.matches) layoutMobilePanel();
     start.focus({ preventScroll: true });
   }
 
@@ -557,6 +615,9 @@ export function startMission(host, api) {
     if (destroyed) return;
     destroyed = true;
     clearWork();
+    narrow.removeEventListener('change', onWidthChange);
+    motion.removeEventListener('change', onMotionChange);
+    mobileActions.clear();
     if (typeof unsubscribe === 'function') unsubscribe();
     doc.removeEventListener('keydown', onKey, true);
     doc.removeEventListener('focusin', keepFocus);

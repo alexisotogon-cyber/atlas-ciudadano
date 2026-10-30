@@ -1,0 +1,145 @@
+/* Atlas móvil: el mapa ocupa el escenario y la ficha se mueve sobre él. */
+@media (max-width: 860px) {
+  body.mode-map .strip { display:none; }
+  body.mode-map:not(.presenting) .atlas { grid-template-rows:minmax(0,1fr) auto; grid-template-areas:"center" "rail"; gap:0; padding:0; }
+  body.mode-map #stage { border:0; border-radius:0; }
+  body.mode-map .rail { padding-bottom:calc(6px + env(safe-area-inset-bottom,0px)); }
+  body.mode-map:not(.presenting) #detail {
+    box-sizing:border-box; left:0; right:0; bottom:var(--sheet-rail,64px); width:100%;
+    height:var(--sheet-h,120px); max-height:none; padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left)); overflow:hidden;
+    display:flex; flex-direction:column; gap:0; border:2px solid var(--px-line); border-radius:0;
+    background:var(--px-card); box-shadow:3px 3px 0 var(--px-shadow);
+    transition:transform .32s cubic-bezier(.32,.72,0,1),height .32s cubic-bezier(.32,.72,0,1);
+  }
+  body.mode-map #detail.sheet-dragging, body.mode-map #detail.sheet-instant { transition:none; }
+  body.mode-map #detail .sheet-handle { flex:0 0 44px; height:44px; margin:0; touch-action:none; }
+  body.mode-map #detail-body { min-height:0; flex:1; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; padding:8px 0 24px; }
+  body.mode-map #detail .search { flex-shrink:0; margin:0 0 8px; }
+  body.mode-map #detail .detail-foot { display:none; }
+  body.mode-map .sheet-summary { flex-shrink:0; touch-action:none; display:none; font-size:24px; line-height:1.3; font-weight:700; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  body.mode-map #detail[data-detent="peek"]:not(.sheet-dragging) .sheet-summary { display:block; }
+  body.mode-map #detail[data-detent="peek"]:not(.sheet-dragging) :is(.search,#detail-body) { visibility:hidden; }
+  body.mode-map.demoing #detail, body.mode-map.gaming #detail { display:none; }
+
+  /* Una fila superior sin cambiar el orden del documento. */
+  body.mode-map:not(.presenting) .tools { top:max(10px,env(safe-area-inset-top)); right:max(10px,env(safe-area-inset-right)); left:auto; flex-direction:row; gap:8px; transform:none; }
+  body.mode-map:not(.presenting) :is(#zoom-in,#zoom-out,#present,#play) { display:none; }
+  body.mode-map:not(.presenting) #filters-btn { width:44px; height:44px; min-height:44px; }
+  body.mode-map:not(.presenting) .years { display:flex; top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); right:auto; bottom:auto; height:44px; box-sizing:border-box; gap:0; padding:0; transform:none; }
+  body.mode-map:not(.presenting) .years > button { width:44px; min-width:44px; height:44px; }
+  body.mode-map:not(.presenting) .years .y-now { width:88px; min-width:0; text-align:center; }
+  body.mode-map:not(.presenting) .years #y-kind { font-size:10px; }
+  body.mode-map:not(.presenting) #back-mx { top:max(10px,env(safe-area-inset-top)); left:max(10px,env(safe-area-inset-left)); width:44px; min-width:44px; height:44px; min-height:44px; padding:0; justify-content:center; }
+  body.mode-map:not(.presenting) #back-mx > span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  body.mode-map:not(.presenting):has(#back-mx:not([hidden])) .years { left:calc(max(10px,env(safe-area-inset-left)) + 52px); }
+  body.mode-map:not(.presenting) #filters { top:calc(max(10px,env(safe-area-inset-top)) + 54px); left:max(10px,env(safe-area-inset-left)); right:max(10px,env(safe-area-inset-right)); width:auto; max-width:none; box-sizing:border-box; transform:none; background:var(--px-card); border:2px solid var(--px-line); border-radius:0; }
+
+  /* La leyenda sigue el borde visible de la hoja, incluso durante el arrastre. */
+  body.mode-map:not(.presenting) #legend { display:grid; grid-template-columns:auto 18px minmax(0,1fr) 18px; align-items:center; gap:6px; top:auto; bottom:calc(var(--sheet-top-offset,120px) + 8px); left:10px; right:10px; width:auto; max-width:none; height:36px; box-sizing:border-box; padding:4px 8px; background:var(--px-card); border:2px solid var(--px-line-soft); box-shadow:none; }
+  body.mode-map #legend b { grid-column:1; grid-row:1; max-width:110px; margin:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; }
+  body.mode-map #legend .bar { grid-column:3; grid-row:1; height:8px; }
+  body.mode-map #legend .bar i { flex:1; width:auto; height:8px; }
+  body.mode-map #legend .ticks { display:contents; }
+  body.mode-map #legend .ticks span { display:none; }
+  body.mode-map #legend .ticks span:nth-child(2), body.mode-map #legend .ticks span:last-child { display:block; visibility:visible; width:auto; transform:none; font-size:12px; grid-row:1; }
+  body.mode-map #legend .ticks span:nth-child(2) { grid-column:2; }
+  body.mode-map #legend .ticks span:last-child { grid-column:4; }
+  body.mode-map #legend :is(.ends,.legend-hint) { display:none; }
+  body.mode-map:has(#detail[data-detent="full"]) #legend, body.mode-map .caption { display:none; }
+  body.mode-map :is(#map,.tools,.years,#back-mx,#legend) { -webkit-user-select:none; user-select:none; }
+  body.mode-map #map, body.mode-map #map path { touch-action:none; }
+  button { touch-action:manipulation; }
+  body.mode-map #map path:active { filter:brightness(1.2); stroke-width:2px; }
+  @media (prefers-reduced-motion:reduce) {
+    body.mode-map #detail { transition:none; }
+  }
+}
+@media (max-width: 860px) {
+  /* «Prefiero no decir» no cabe en una línea: los segmentos se ajustan */
+  .you-seg { display:grid; grid-auto-columns:minmax(0,1fr); grid-auto-flow:column; }
+  .you-seg button { white-space:normal !important; line-height:1.2; padding:6px 4px; font-size:15px; }
+}
+@media (max-width: 360px) {
+  /* Pantallas de 320–360 px: las preferencias ceden espacio a las pestañas */
+  .rail .preferences { flex: 0 0 84px !important; min-width: 84px !important; gap: 4px !important; }
+  #rail-nav .preferences button { flex-basis: 40px !important; width: 40px !important; min-width: 40px !important; }
+  .rail .nav-item, .rail .nav-foot { font-size: 11px !important; }
+}
+
+@media (max-width: 860px) {
+  /* La navegación queda entre la agarradera y el contenido en las tres alturas. */
+  .sheet-nav { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; gap:8px; align-items:center; flex:0 0 auto; min-height:56px; touch-action:none; user-select:none; }
+  .sheet-nav button { box-sizing:border-box; width:44px; height:44px; min-height:44px; padding:0; border:2px solid var(--px-line); border-radius:0; background:var(--px-card); color:var(--ink); font-size:30px; line-height:1; }
+  .sheet-nav button[hidden] { display:none; }
+  .sheet-nav-center { position:relative; min-width:0; text-align:center; }
+  .sheet-nav-text { display:grid; gap:3px; }
+  .sheet-nav-text strong { font-size:18px; line-height:1.2; font-weight:700; overflow-wrap:anywhere; }
+  .sheet-nav-text small { color:var(--muted); font-size:13px; line-height:1.3; }
+  .sheet-nav-out { position:absolute; inset:0; pointer-events:none; }
+  body.mode-map #detail.has-sheet-nav .sheet-summary { display:none; }
+  #detail .back[data-act="country"], #detail.has-sheet-nav #detail-body > :is(.eyebrow,.tcard,.back[data-act="back"],h1),
+  #detail-body > :is(p.d-lead,p.d-note) { display:none; }
+  #detail .who-m > summary, #detail .voting-m > summary { display:flex; align-items:center; justify-content:space-between; box-sizing:border-box; min-height:48px; cursor:pointer; font-weight:700; list-style:none; }
+  #detail :is(.who-m,.voting-m) > summary::-webkit-details-marker { display:none; }
+  #detail :is(.who-m,.voting-m)[open] > summary > span { transform:rotate(180deg); }
+  #detail .who-m { border-top:1px solid var(--px-line); border-bottom:1px solid var(--px-line); margin:12px 0; }
+  #detail .who-m .who { margin:0 0 12px; }
+  #detail .who-m .who > h2 { display:none; }
+
+  /* Una portada breve deja las dos acciones principales a la vista. */
+  body.mode-home #detail { max-height:min(78dvh,calc(100dvh - 100px)); padding:6px 16px 16px; }
+  body.mode-home #detail-body { padding-top:8px; display:flex; flex-direction:column; gap:8px; }
+  body.mode-home #detail .search, body.mode-home #detail .detail-foot { display:none; }
+  body.mode-home #detail .sheet-handle { height:28px; min-height:28px; margin:0; }
+  body.mode-home #detail .eyebrow { margin:0; font-size:11px; line-height:1.3; }
+  body.mode-home #detail h1 { margin:0; font-size:clamp(26px,7vw,34px); line-height:1.08; }
+  body.mode-home #detail :is(.home-bridge,p.d-lead) { display:none; }
+  body.mode-home #detail-body > .home-block { margin:0; padding:0; border:0; }
+  body.mode-home #detail-body > .home-block > .home-sec { display:none; }
+  body.mode-home #detail .home-kpis { display:block; }
+  body.mode-home #detail .home-kpi:not(:first-child), body.mode-home #detail .home-kpi :is(.hk-sub,.hs-people) { display:none; }
+  body.mode-home #detail .home-kpi { display:flex; flex-direction:column; gap:2px; padding:8px 10px; box-shadow:none; }
+  body.mode-home #detail .hk-num { order:-1; margin:0; font-size:32px; line-height:1; }
+  body.mode-home #detail .hk-label { font-size:11px; line-height:1.3; letter-spacing:0; }
+  body.mode-home #detail .hk-label::before { content:none; }
+  body.mode-home #detail .d-cta { margin:0; gap:8px; }
+  body.mode-home #detail .d-cta button { min-height:48px; padding:8px 10px; font-size:15px; }
+
+  /* Tarjetas de desplazamiento nativo, con acceso por tabulador y teclado. */
+  #detail .home-carousel { display:flex; flex:0 0 auto; align-items:flex-start; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; padding:8px 2px 12px; overscroll-behavior-x:contain; }
+  #detail .home-carousel > .home-block { box-sizing:border-box; flex:0 0 85%; min-width:0; margin:0; padding:12px; border:2px solid var(--px-line); scroll-snap-align:start; scroll-margin:2px; }
+  #detail .home-carousel .home-sec { margin:0 0 8px; font-size:17px; }
+  #detail .home-carousel p { margin:0 0 8px; font-size:13px; line-height:1.4; }
+  #detail .home-carousel :is(.teaser,.insight,.you-cta) { box-sizing:border-box; width:100%; min-width:0; padding:8px; box-shadow:none; margin:0; }
+  #detail .home-carousel :is(.ins-pair,.teaser .ins-k,.teaser .d-note,.teaser .tz-txt,.you-cta-px) { display:none; }
+  #detail .home-carousel .tz-num { font-size:26px; }
+  #detail .home-carousel .you-cta { display:flex; }
+  #detail .home-carousel .you-cta small { display:block; margin-top:4px; }
+  #detail .home-carousel .insights { display:grid; gap:8px; }
+  #detail .home-carousel .insight { gap:6px; }
+  #detail .home-carousel .ins-t { font-size:14px; }
+  #detail .insights-more > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; text-decoration:underline; }
+  #detail .insights-more .insight { margin-top:8px; }
+  #detail .voting-m { border-top:1px solid var(--px-line); }
+  #detail .voting-m .home-block { margin:0; padding:0; border:0; }
+
+  /* En 320 px, las preferencias ceden espacio sin recortar ninguna etiqueta. */
+  .rail .preferences { flex:0 0 84px !important; min-width:84px !important; gap:4px !important; }
+  #rail-nav .preferences button { flex-basis:40px !important; width:40px !important; min-width:40px !important; }
+  .rail .nav-foot { flex:1 1 0; }
+  .rail :is(.nav-item,.nav-foot) span { overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:normal; font-size:11px; }
+  /* Las transiciones móviles son breves; el globo conserva su introducción. */
+  body *, body *::before, body *::after { animation-duration:300ms !important; animation-delay:0s !important; animation-iteration-count:1 !important; transition-duration:150ms !important; transition-delay:0s !important; }
+  body.mode-map #detail { transition-duration:300ms !important; }
+  @media (hover:none) {
+    #detail :is(button,a,.tcard):hover, .rail button:hover { transform:none !important; filter:none !important; }
+    #detail :is(.ins-cta .lc,.tc-art img):hover, #detail :is(.insight,.teaser):hover .ins-cta .lc { transform:none !important; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    body *, body *::before, body *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+  }
+}
+@media (max-width: 860px) {
+  /* La línea de crédito se ajusta en 320 px en vez de cortarse */
+  .mode-home #detail .eyebrow { white-space: normal; overflow: visible; text-overflow: clip; }
+}

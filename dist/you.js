@@ -55,11 +55,11 @@ export function mountYou(dialog, api) {
     const k = Math.round(n.r / 10), d = n.nat != null ? api.diff1(n.r, n.nat) : null;
     const people = Array.from({ length: 10 }, (_, i) => `<svg viewBox="0 0 24 40" aria-hidden="true" class="hp${i < k ? ' on' : ''}" style="--i:${i}"><path d="${PERSON}"/></svg>`).join('');
     const dir = d == null || Math.abs(d) < .05 ? 'eq' : d > 0 ? 'up' : 'down';
-    const row = (label, v, extra = '') => v == null ? '' : `<li><span>${label}</span><b>${fmt1(v)} %</b>${extra}</li>`;
+    const row = (label, v, extra = '') => v == null ? '' : `<li><span>${label}</span><b>${fmt1(v)}\u00a0%</b>${extra}</li>`;
     return `
       <div class="you-card" style="--c:${api.color(n.r)}">
         <p class="you-k">${t('you.lead', { group: groupLabel(), state: n.name })}</p>
-        <div class="you-big">${fmt1(n.r)} %</div>
+        <div class="you-big">${fmt1(n.r)}\u00a0%</div>
         <p class="you-when">${t('you.when')}</p>
         <div class="hs-people you-people" aria-label="${t('you.of10', { n: k })}">${people}</div>
         <ul class="you-cmp">
@@ -95,7 +95,7 @@ export function mountYou(dialog, api) {
     const fit = (txt, weight, size, x, y) => { let f = size; do { g.font = `${weight} ${f}px Inter, sans-serif`; f -= 2; } while (g.measureText(txt).width > MAXW && f > 20); g.fillText(txt, x, y); };
     g.fillStyle = '#f4f4f5'; fit(t('you.cardTitle', { state: n.name }), 600, 54, X, 1010);
     g.fillStyle = '#a1a1aa'; fit(groupLabel(), 400, 42, X, 1072);
-    g.fillStyle = '#f4f4f5'; g.font = '700 230px Inter, sans-serif'; g.fillText(`${fmt1(n.r)} %`, X - 10, 1300);
+    g.fillStyle = '#f4f4f5'; g.font = '700 230px Inter, sans-serif'; g.fillText(`${fmt1(n.r)}\u00a0%`, X - 10, 1300);
     g.fillStyle = api.color(n.r); g.fillRect(X, 1330, 240, 12);
     g.fillStyle = '#d4d4d8'; fit(t('you.cardWhen'), 400, 38, X, 1410);
     const k = Math.round(n.r / 10), path = new Path2D(PERSON);

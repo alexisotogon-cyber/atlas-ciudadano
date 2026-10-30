@@ -80,7 +80,7 @@ function sparkline(trend = [], labels = {}) {
   return svg;
 }
 
-export function renderCard(host, model, { direction = 0 } = {}) {
+export function renderCard(host, model, { direction = 0, motionTiming = options => options } = {}) {
   const labels = model.labels || {};
   const previous = swaps.get(host);
   if (previous) previous.animations.forEach(animation => animation.cancel());
@@ -155,10 +155,10 @@ export function renderCard(host, model, { direction = 0 } = {}) {
       { opacity: 1, transform: 'perspective(900px) translateX(0) rotateY(0)' },
       { opacity: 0, transform: sign ? `perspective(900px) translateX(${-sign * 40}px) rotateY(${sign * 70}deg)` : 'scale(.96)' }
     ];
-    const animation = old.animate(outgoing, { duration: reduced ? 150 : 260, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' });
+    const animation = old.animate(outgoing, motionTiming({ duration: reduced ? 150 : 260, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' }));
     animation.onfinish = () => { old.remove(); animation.cancel(); };
     state.animations.push(animation);
   }
-  const entering = card.animate(incoming, { duration: reduced ? 150 : 340, easing: 'cubic-bezier(.2,.7,.2,1)' });
+  const entering = card.animate(incoming, motionTiming({ duration: reduced ? 150 : 340, easing: 'cubic-bezier(.2,.7,.2,1)' }));
   state.animations.push(entering);
 }

@@ -864,7 +864,114 @@ body.demoing #stage :is(.legend, #legend) { left: auto; right: 16px; top: auto; 
   .demo-stage-pixel .demo-spark { display: none; }
 }
 
-/* Celular: Pixel arriba del mapa visible (la hoja del recorrido ocupa la parte baja) */
+
+/* Escritorio: Pixel arriba a la derecha del mapa, junto al panel del recorrido */
+@media (min-width: 861px) {
+  body.demoing .demo-stage-pixel {
+    top: 24px; bottom: auto; left: auto; right: 24px;
+    flex-direction: row-reverse; align-items: flex-start;
+  }
+  body.demoing .demo-stage-speech { margin: 28px 0 0; }
+  body.demoing .demo-stage-speech::before,
+  body.demoing .demo-stage-speech::after {
+    left: auto; bottom: auto;
+    border-left: 0; border-bottom: 0;
+    border-right: 2px solid var(--px-line); border-top: 2px solid var(--px-line);
+  }
+  body.demoing .demo-stage-speech::before { right: -8px; top: 18px; }
+  body.demoing .demo-stage-speech::after { right: -14px; top: 12px; }
+}
+
+/* Historial móvil: el escenario queda visible y las acciones no se desplazan. */
 @media (max-width: 860px) {
-  body.demoing .demo-stage-pixel { top: 12px !important; bottom: auto !important; align-items: flex-start; }
+  .demo-story-bar {
+    position: absolute; z-index: 41; top: calc(env(safe-area-inset-top, 0px) + 8px);
+    left: 10px; right: 10px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px; pointer-events: none;
+  }
+  .demo-story-bar[hidden] { display: none; }
+  .demo-story-segment { height: 4px; background: var(--px-line-soft); }
+  .demo-story-segment.is-filled { background: var(--px-fill); }
+  body.demoing .demo .demo-dock:not(.demo-dock--final) {
+    max-height: calc(var(--demo-stage-height, 100dvh) * .5);
+    display: flex; flex-direction: column; overflow: hidden; touch-action: pan-y;
+    border: 2px solid var(--px-line); border-radius: 0; box-shadow: 3px 3px 0 var(--px-shadow);
+    background: var(--panel);
+  }
+  body.demoing .demo .demo-dock:not(.demo-dock--final) .demo-bubble {
+    display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
+    max-height: 100%; padding: 0; overflow: hidden; background: var(--panel);
+  }
+  body.demoing .demo .demo-dock:not(.demo-dock--final) .demo-content {
+    flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 0;
+    mask-image: none; -webkit-mask-image: none;
+  }
+  body.demoing .demo .demo-story-content {
+    flex: 1 1 auto; min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior: contain; padding: 10px 12px 8px;
+    display: flex; flex-direction: column;
+  }
+  body.demoing .demo .demo-story-content > * { flex-shrink: 0; }
+  body.demoing .demo .demo-story-content .demo-kicker { margin-bottom: 4px; font-size: 10px; }
+  body.demoing .demo .demo-story-content .demo-title { margin: 0 0 6px; padding: 0; font-size: 20px; line-height: 1.2; }
+  body.demoing .demo .demo-story-content .demo-text { order: 4; margin: 6px 0 8px; font-size: 14px; line-height: 1.35; }
+  body.demoing .demo .demo-story-content .demo-stats { order: 2; margin: 0 0 6px; gap: 8px; }
+  body.demoing .demo .demo-story-content .demo-number,
+  body.demoing .demo .demo-story-content .demo-stat:first-child .demo-number { font-size: 32px; line-height: 1.1; }
+  body.demoing .demo .demo-story-content .demo-stat-label { font-size: 12px; }
+  body.demoing .demo .demo-story-content .demo-viz { order: 3; margin: 4px 0 6px; }
+  body.demoing .demo .demo-bubble .demo-footer {
+    position: sticky; bottom: 0; flex: 0 0 auto; z-index: 2; margin: 0;
+    padding: 8px 10px calc(4px + env(safe-area-inset-bottom, 0px));
+    background: var(--panel); border-top: 2px solid var(--px-line);
+  }
+  body.demoing .demo .demo-dock .demo-footer .demo-progress { display: none; }
+  body.demoing .demo .demo-bubble .demo-actions {
+    display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 8px;
+    padding: 0; border: 0;
+  }
+  body.demoing .demo .demo-actions .demo-button { min-height: 48px; min-width: 0; border-radius: 0; }
+  body.demoing .demo .demo-actions .demo-button--ghost:first-child { width: 48px; height: 48px; padding: 0; }
+  body.demoing .demo .demo-actions .demo-button--primary { width: 100%; border: 2px solid var(--px-line); box-shadow: 3px 3px 0 var(--px-shadow); }
+  body.demoing .demo .demo-actions .demo-button--skip {
+    grid-column: 1 / -1; min-height: 44px; height: 44px; margin: 0; padding: 4px;
+    background: var(--panel); color: var(--muted); border: 0; box-shadow: none; text-decoration: underline;
+  }
+  body.demoing .demo-stage-pixel {
+    top: auto; bottom: var(--demo-sheet-overlap, 0px); left: 20px; right: 12px;
+    align-items: flex-end; gap: 16px;
+  }
+  body.demoing .demo-stage-pixel .demo-pixel-pop,
+  body.demoing .demo-stage-pixel .demo-pixel-float { animation: none; transform: none; }
+  body.demoing .demo-stage-speech {
+    max-width: calc(100% - 90px); margin: 0 0 4px; padding: 6px 8px;
+    border: 2px solid var(--px-line); border-radius: 0; background: var(--px-card);
+    box-shadow: 3px 3px 0 var(--px-shadow);
+  }
+  body.demoing .demo-stage-label { display: none; }
+  body.demoing .demo-stage-text {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    overflow: hidden; font-size: 14px; line-height: 1.35;
+  }
+  body.demoing .demo .demo-final { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+  body.demoing .demo .demo-final-actions {
+    position: sticky; bottom: -1px; z-index: 3; padding: 10px 0;
+    background: var(--panel); border-top: 2px solid var(--px-line);
+  }
+  body.demoing .demo .demo-final-actions .demo-button { min-height: 44px; }
+}
+@media (max-width: 860px) {
+  /* Acciones extra del paso (p. ej. «Cómo usar el mapa»): enlace a todo lo ancho, no flecha */
+  body.demoing .demo .demo-actions .demo-button--ghost:not(:first-child) {
+    grid-column: 1 / -1; min-height: 44px; padding: 4px; border: 0 !important; background: transparent !important;
+    box-shadow: none; color: var(--px-link, var(--px-hl)) !important; font-size: 14px; font-weight: 700 !important;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+  }
+}
+@media (max-width: 860px) {
+  /* Pie compacto: «Cómo usar el mapa» y «Ir al mapa» comparten fila */
+  body.demoing .demo .demo-bubble .demo-actions:has(.demo-button--ghost:not(:first-child)) { grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1fr); }
+  body.demoing .demo .demo-bubble .demo-actions:has(.demo-button--ghost:not(:first-child)) .demo-button--primary { grid-column: 2 / -1; }
+  body.demoing .demo .demo-bubble .demo-actions:has(.demo-button--ghost:not(:first-child)) .demo-button--ghost:not(:first-child) { grid-column: 1 / 3; }
+  body.demoing .demo .demo-bubble .demo-actions:has(.demo-button--ghost:not(:first-child)) .demo-button--skip { grid-column: 3; }
 }
