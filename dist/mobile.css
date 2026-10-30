@@ -1,0 +1,152 @@
+/* Capa móvil: superficies sólidas, esquinas rectas y controles táctiles. */
+@media (max-width: 860px) {
+  body { font-size: 14px; -webkit-tap-highlight-color: transparent; }
+  button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+  input, select, textarea, .search input, #m-q, .mission input { font-size: 16px; }
+  .atlas { grid-template-columns: minmax(0, 1fr); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  /* Inicio entrega el espacio de la tira al globo y la hoja. */
+  body.mode-home .strip { display: none; }
+  body.mode-home:not(.presenting) .atlas { grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "center" "rail"; }
+  .atlas > *, .nav-main, .nav-main > li { min-width: 0; }
+
+  /* Las etiquetas ceden espacio antes de ensanchar la página. */
+  .rail { min-width: 0; gap: 4px; padding: 4px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left)); overflow: visible; background: var(--panel) !important; border-radius: 0; border-top: 2px solid var(--px-line-soft, var(--line2)); backdrop-filter: none; }
+  .rail .nav-main { flex: 3 1 0; gap: 0; }
+  .rail .nav-main > li { display: flex; flex: 1 1 0; }
+  .rail .nav-item, .rail .nav-foot {
+    flex: 1 1 0; min-width: 0; min-height: 52px; margin: 0; padding: 4px 2px;
+    border: 0; border-radius: 0 !important; background: transparent; color: var(--muted);
+    box-shadow: none; font: 600 12px/1.3 Inter, var(--font, sans-serif);
+  }
+  .rail :is(.nav-item, .nav-foot) span { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: inherit; }
+  .rail .nav-item[aria-current="page"] { color: var(--ink) !important; background: transparent !important; box-shadow: inset 0 3px 0 var(--px-fill, #7c3aed) !important; }
+  .rail .nav-item[aria-current="page"] .lc { stroke-width: 2.25; }
+  .rail .preferences { flex: 0 0 94px; min-width: 94px; gap: 6px; overflow: visible; margin: 0; flex-wrap: nowrap; }
+  #rail-nav .preferences button { flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; border: 2px solid var(--px-line); box-shadow: 2px 2px 0 var(--px-shadow); }
+  .rail .nav-help { display: none; }
+
+  /* Sistema de botones: base secundaria y acciones principales moradas. */
+  :is(.btn-primary, .btn-ghost, .demo-button, .tut-button, .share-sheet__button, .share-sheet__close, .who-clear, .back, .back-mx, .you-seg button, .preferences button, .tool, .globe-zoom button, #zoom-in, #zoom-out) {
+    box-sizing: border-box; min-height: 48px; max-width: 100%; padding: 10px 14px;
+    border-radius: 0 !important; border: 2px solid var(--px-line, var(--ink)) !important;
+    background: var(--px-card, var(--panel)) !important; color: var(--ink) !important;
+    box-shadow: 3px 3px 0 var(--px-shadow, #000); font-weight: 600 !important;
+    font-size: 16px; white-space: normal; filter: none; touch-action: manipulation;
+  }
+  :is(.btn-primary, .btn-primary.sm, .demo .demo-button--primary, .demo .demo-button--gap-play, .demo .demo-button--gap2, .demo .demo-button--sim-play, .demo .demo-button--pledge-share, .tut-bubble .tut-primary, .tut-bubble .tut-next, .share-sheet .share-sheet__primary, .back-mx) {
+    min-height: 52px; background: var(--px-fill, #7c3aed) !important; color: var(--px-on-fill, #fff) !important;
+    border-color: var(--px-fill, #7c3aed) !important; justify-content: center;
+  }
+  :is(.btn-primary, .demo .demo-button--primary, .tut-bubble .tut-primary, .share-sheet .share-sheet__primary, .back-mx):hover:not(:disabled) { background: var(--px-fill-hover, #6d28d9) !important; border-color: var(--px-fill-hover, #6d28d9) !important; }
+  .btn-primary .cap svg { stroke: currentColor; }
+  :is(.btn-primary, .btn-ghost, .demo-button, .tut-button, .share-sheet button, .mission__button, .who-clear, .back, .back-mx, .you-seg button, .preferences button, .tool, .globe-zoom button, .years > button):active:not(:disabled) {
+    transform: translate(2px, 2px) !important; box-shadow: 0 0 0 var(--px-shadow, #000) !important; filter: none;
+  }
+  :is(.btn-primary, .btn-ghost, .demo-button, .tut-button, .share-sheet button, .you-seg button, .tool, .globe-zoom button, .years > button):disabled {
+    background: var(--px-dis-bg, var(--panel)) !important; color: var(--px-dis-tx, var(--muted)) !important;
+    border: 2px dashed var(--px-dis-line, var(--muted)) !important; box-shadow: none; opacity: 1;
+  }
+  :root :is(button, a, input, select, summary):focus-visible { outline: 2px solid var(--px-link); outline-offset: 2px; border-radius: 0; }
+  .d-cta { display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .d-cta :is(.btn-primary, .btn-ghost) { width: 100%; white-space: normal; }
+
+  /* El nombre accesible del botón Atrás permanece en el marcado. */
+  .demo .demo-bubble .demo-actions { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 10px; padding-top: 8px; }
+  .demo .demo-bubble .demo-actions .demo-button--ghost {
+    position: relative; width: 48px; min-width: 48px; height: 48px; min-height: 48px;
+    padding: 0; overflow: hidden; text-indent: -9999px; white-space: nowrap;
+  }
+  .demo .demo-bubble .demo-actions .demo-button--ghost::before { content: none; }
+  .demo .demo-bubble .demo-actions .demo-button--ghost::after {
+    content: ''; position: absolute; left: 19px; top: 16px; width: 10px; height: 10px;
+    border: solid currentColor; border-width: 0 0 2.5px 2.5px; transform: rotate(45deg);
+  }
+  .demo .demo-bubble .demo-actions .demo-button--primary { min-width: 0; width: 100%; padding: 10px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .demo .demo-bubble .demo-actions .demo-button--skip { grid-column: 1 / -1; justify-self: stretch; margin: 0; text-align: center; }
+  .demo .demo-bubble .demo-actions .demo-button--primary:first-child { grid-column: 1 / -1; }
+  .demo .demo-bubble, .tut-bubble { border-radius: 0 !important; border: 2px solid var(--px-line, var(--ink)); box-shadow: 4px 4px 0 var(--px-shadow, #000); }
+  .demo .demo-bubble { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .tut-bubble .tut-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+  .tut-bubble:not(.tut-final) .tut-ghost { grid-column: 1; grid-row: 1; }
+  .tut-bubble:not(.tut-final) .tut-primary { grid-column: 2; grid-row: 1; }
+  .tut-bubble.tut-final .tut-actions { grid-template-columns: minmax(0, 1fr); }
+  .tut-bubble.tut-final .tut-button { width: 100%; }
+  .demo .demo-button--skip, .tut-bubble:not(.tut-final) .tut-ghost {
+    min-height: 44px; padding: 8px; border: 0 !important; background: transparent !important;
+    color: var(--px-link, #c4b5fd) !important; box-shadow: none; font-size: 14px; font-weight: 700 !important;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+  }
+  :is(.demo .demo-button--skip, .tut-bubble:not(.tut-final) .tut-ghost):active:not(:disabled) { box-shadow: none !important; }
+
+  /* La hoja de compartir se ancla abajo y respeta la zona segura. */
+  .share-sheet { inset: auto 0 0; width: 100%; margin: 0; border-radius: 0; border-top: 2px solid var(--px-line, var(--ink)); padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--panel); }
+  .share-sheet .share-sheet__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .share-sheet [data-share="share"], .share-sheet .share-sheet__primary { grid-column: 1 / -1; }
+  .share-sheet .share-sheet__close { flex: 0 0 48px; width: 48px; height: 48px; padding: 0; }
+  :root .share-sheet .share-sheet__preview { border-radius: 0; }
+  :root .share-sheet .share-sheet__button { min-width: 0; font-size: 14px; }
+  .you :is(p, label), .share-sheet p { font-size: 14px; }
+  .you small, .detail small, .demo .demo-bubble small { font-size: 12px; }
+  .you-seg { border-radius: 0; gap: 6px; }
+  .you-seg button { min-width: 0; padding: 8px; border-radius: 0; white-space: nowrap; }
+  .you-seg button[aria-checked="true"] { background: var(--px-fill, #7c3aed) !important; border-color: var(--px-fill, #7c3aed) !important; color: var(--px-on-fill, #fff) !important; }
+  #you-cc, .wv-row, .wv-check { border-radius: 0; border: 2px solid var(--px-line-soft, var(--line2)); }
+
+  /* Tarjetas y hojas con contornos rectos, sin acentos interiores. */
+  .insight, .teaser, .you-cta, .home-kpi, .home-bridge, .search {
+    min-width: 0; border-radius: 0 !important; border: 2px solid var(--px-line-soft, var(--line2));
+    background: var(--px-card, var(--panel)); box-shadow: 3px 3px 0 var(--px-shadow, #000);
+  }
+  .home-kpi::before, .home-bridge::before { content: none; }
+  .search input { border-radius: 0; min-width: 0; min-height: 48px; }
+  .detail { border-radius: 0 !important; border-top: 2px solid var(--px-line, var(--ink)); box-shadow: 0 -4px 0 var(--px-shadow, #000); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .sheet-handle { width: 100%; height: 44px; min-height: 44px; margin: 0; padding: 0; position: relative; border: 0; border-radius: 0; background: transparent; }
+  .sheet-handle::after { content: ''; position: absolute; left: 50%; right: auto; top: 20px; width: 40px; height: 4px; margin-left: -20px; border-radius: 0; background: var(--muted); }
+  .tool, .globe-zoom button, #zoom-in, #zoom-out {
+    display: grid; place-items: center; width: 44px; min-width: 44px; height: 44px; min-height: 44px;
+    padding: 0; background: var(--panel) !important; box-shadow: 3px 3px 0 var(--px-shadow, #000); backdrop-filter: none;
+  }
+  /* El pellizco deja libres los pines de la portada. */
+  .mode-home .globe-zoom, .mode-home #g-zin, .mode-home #g-zout { display: none; }
+  .globe-zoom { border: 2px solid var(--px-line-soft); border-radius: 0; background: transparent !important; gap: 8px; box-shadow: none; backdrop-filter: none; }
+  .years { border-radius: 0 !important; border: 2px solid var(--px-line-soft, var(--line2)); background: var(--panel); backdrop-filter: none; }
+  .years > button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 0 !important; }
+  .back-mx { border-radius: 0; }
+  .scard, .scard .sc-in, .scard .sc-art, .sc-num { border-radius: 0 !important; }
+  :is(.scard small, .sc-top .nm, .sc-top .rt, .sc-bot, .legend .ticks span, .tut-count, .demo .demo-kpi-label, .you-label, .you-k, .home-kpi small, .home-bridge small) { font-size: 12px; }
+  :is(.insight p, .teaser p, .you-cta p, .home-bridge p, .demo .demo-bubble p, .tut-text) { font-size: 14px; }
+}
+
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  :is(button, a, .insight, .teaser, .you-cta, .wv-row):active:not(:disabled) { transform: none !important; }
+}
+
+@media (max-width:860px) {
+  /* Cada control tiene su propia esquina; la columna derecha deja libre la leyenda. */
+  body.mode-map:not(.presenting) .back-mx { top:10px; left:10px; min-height:44px; height:44px; padding:0 10px; font-size:14px; }
+  body.mode-map:not(.presenting) .years { top:10px; right:10px; left:auto; bottom:auto; padding:0; transform:none; }
+  body.mode-map:not(.presenting) .tools { flex-direction:column; top:64px; right:10px; left:auto; gap:8px; transform:none; }
+  body.mode-map:not(.presenting) .legend { display:block; top:64px; left:10px; right:auto; bottom:auto; width:170px; max-width:calc(100% - 80px); padding:8px; }
+  .mode-map .legend .ticks span { display:none; width:auto; }
+  .mode-map .legend .ticks span:is(:nth-child(2), :nth-child(6), :last-child) { display:block; visibility:visible; }
+  .mode-map .legend .ends { display:flex; flex-wrap:wrap; gap:6px; }
+  .mode-map .legend .nd { order:1; flex-basis:100%; }
+  body.mode-map:not(.presenting) .caption { bottom:24px; }
+  body.mode-map:not(.presenting):has(#detail.open) .caption { display:none; }
+  body.mode-map:not(.presenting) .filters { top:64px; left:10px; right:72px; width:auto; max-width:320px; transform:none; }
+  /* El último botón de la portada puede desplazarse por encima de la barra inferior. */
+  .mode-home #detail-body { padding-bottom:calc(64px + env(safe-area-inset-bottom,0px)); }
+}
+@media (max-width:399px) {
+  body.mode-map:not(.presenting) .back-mx { width:44px; min-width:44px; padding:0; }
+  body.mode-map:not(.presenting) .back-mx > span { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); clip-path:inset(50%); white-space:nowrap; border:0; }
+}
+@media (max-width:440px) {
+  #detail .detail-facts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #detail .detail-fact:last-child { grid-column:1 / -1; }
+  #detail .detail-fact strong { white-space:nowrap; overflow-wrap:normal; }
+}
+@media (max-width:860px) and (max-height:500px) {
+  /* En pantallas bajas, incluso la hoja abierta deja espacio al mapa. */
+  body:not(.presenting) #detail, body:not(.presenting) #detail.open { max-height:45dvh; }
+}

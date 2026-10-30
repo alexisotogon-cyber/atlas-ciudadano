@@ -1,0 +1,312 @@
+:root .mission {
+  --mission-correct-text: var(--px-ok, #a7d6b5);
+  --mission-correct-bg: var(--px-ok-bg, #162b20);
+  --mission-correct-border: var(--px-ok, #a7d6b5);
+  --mission-wrong-text: var(--px-bad, #edb0b7);
+  --mission-wrong-bg: var(--px-bad-bg, #351b23);
+  --mission-wrong-border: var(--px-bad, #edb0b7);
+  --mission-almost: var(--px-link, #c4b5fd);
+  --mission-tint: var(--px-tint, #241a40);
+  --mission-link: var(--px-link, #c4b5fd);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--ink);
+  font-family: Inter, var(--font, sans-serif);
+  line-height: 1.5;
+  isolation: isolate;
+  --mission-pixel: var(--pixel, 'Silkscreen', var(--mono, monospace));
+}
+
+:root[data-theme="light"] .mission {
+  --mission-correct-text: var(--px-ok, #245c37);
+  --mission-correct-bg: var(--px-ok-bg, #e5f2e8);
+  --mission-correct-border: var(--px-ok, #245c37);
+  --mission-wrong-text: var(--px-bad, #912d40);
+  --mission-wrong-bg: var(--px-bad-bg, #fbe9ec);
+  --mission-wrong-border: var(--px-bad, #912d40);
+  --mission-almost: var(--px-link, #5b21b6);
+  --mission-tint: var(--px-tint, #ede9fe);
+  --mission-link: var(--px-link, #5b21b6);
+}
+
+:root .mission .mission__blocks.is-answered > button { position: relative; }
+:root .mission .mission__blocks.is-answered > :not(.is-correct):not(.is-wrong) { opacity: 1; }
+:root .mission .mission__blocks [data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  width: max-content;
+  color: inherit;
+  background: inherit;
+  border: 0;
+  padding: 5px 8px;
+  text-transform: uppercase;
+  font: 400 11px/1.4 var(--mission-pixel);
+}
+:root .mission .mission__blocks > :nth-child(-n + 4)[data-label]::before { right: auto; left: 0; }
+:root .mission .mission__blocks .is-wrong[data-label]::before { bottom: auto; top: calc(100% + 4px); }
+:root .mission .mission__invite-text { margin: 0 0 24px; font-size: 17px; }
+:root .mission .mission__learned, :root .mission .mission__actions { margin: 24px 0; text-align: left; }
+:root .mission .mission__learned h3, :root .mission .mission__actions h3 { margin: 0 0 12px; font-size: 18px; }
+:root .mission .mission__summary { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+:root .mission .mission__summary li { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+:root .mission .mission__summary-mark { flex: 0 0 auto; font-weight: 700; }
+:root .mission .mission__summary .is-correct .mission__summary-mark { color: var(--mission-correct-text); }
+:root .mission .mission__summary .is-wrong .mission__summary-mark { color: var(--mission-wrong-text); }
+:root .mission .mission__summary-text { display: flex; flex: 1; min-width: 0; white-space: nowrap; }
+:root .mission .mission__summary-question { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+:root .mission .mission__summary-answer { flex: 0 1 auto; max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
+:root .mission .mission__actions { display: grid; gap: 12px; }
+:root .mission .mission__actions h3 { margin-bottom: 0; }
+:root .mission .mission__action { display: flex; align-items: center; gap: 12px; min-height: 56px; text-decoration: none; }
+:root .mission .mission__action > span:not(.mission__action-icon):not(.mission__action-arrow) { min-width: 0; overflow-wrap: anywhere; }
+:root .mission .mission__action-icon, :root .mission .mission__action-icon svg { display: block; width: 24px; height: 24px; flex: 0 0 24px; }
+:root .mission .mission__action-arrow { margin-left: auto; }
+
+:root .mission *, :root .mission *::before, :root .mission *::after { box-sizing: border-box; }
+:root .mission [hidden] { display: none !important; }
+:root .mission .mission__hud {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 48px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: var(--panel);
+  border-bottom: 2px solid var(--px-line-soft, var(--line2, #3f3f46));
+  pointer-events: none;
+}
+:root .mission .mission__logo { font-family: var(--mission-pixel); font-size: 16px; color: var(--ink); }
+:root .mission .mission__progress { display: grid; justify-items: center; gap: 3px; }
+:root .mission .mission__level { font-family: var(--mission-pixel); font-size: 12px; }
+:root .mission .mission__xp { display: flex; gap: 4px; }
+:root .mission .mission__segment { flex: 0 0 12px; width: 12px; height: 12px; border: 2px solid var(--px-line-soft); background: transparent; }
+/* El progreso visual cuenta niveles completados; el valor accesible conserva los XP. */
+:root .mission .mission__segment-fill { display: none; }
+:root .mission .mission__tools { display: flex; align-items: center; gap: 8px; }
+:root .mission .mission__stars { display: flex; gap: 4px; }
+:root .mission .mission__stars path { fill: var(--px-fill, #7c3aed); }
+:root .mission .mission__stars svg { image-rendering: pixelated; flex: 0 0 8px; }
+:root .mission .mission__panel {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  width: min(560px, calc(100% - 48px));
+  max-width: calc(100% - 48px);
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 22px;
+  padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel);
+  border: 2px solid var(--px-line, var(--ink));
+  border-radius: 0;
+  box-shadow: 3px 3px 0 var(--px-shadow, #000);
+  pointer-events: auto;
+  scrollbar-color: var(--px-fill, #7c3aed) var(--panel);
+}
+:root .mission .mission__question { margin: 0 0 18px; font-family: Inter, var(--font, sans-serif); font-size: 21px; line-height: 1.4; color: var(--ink); }
+:root .mission .mission__controls { display: grid; gap: 12px; }
+:root .mission .mission__button {
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 2px solid var(--px-line, var(--ink));
+  border-radius: 0;
+  background: var(--px-card, var(--panel));
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--px-shadow, #000);
+  font: 600 15px/1.4 Inter, var(--font, sans-serif);
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  pointer-events: auto;
+}
+:root .mission .mission__button:hover:not(:disabled) { border-color: var(--px-fill, #7c3aed); }
+:root .mission .mission__button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
+:root .mission .mission__button:disabled { cursor: default; }
+:root .mission .mission__button:disabled:not(.is-correct):not(.is-wrong):not(.is-muted) {
+  background: var(--px-dis-bg, var(--panel)) !important; color: var(--px-dis-tx, var(--muted)) !important;
+  border: 2px dashed var(--px-dis-line, var(--muted)) !important; box-shadow: none !important; opacity: 1 !important;
+}
+:root .mission :focus-visible { outline: 2px solid var(--px-link); outline-offset: 2px; }
+/* El texto de salida sigue accesible y cabe en una sola línea. */
+:root .mission .mission__sound, :root .mission .mission__exit { flex: 0 0 auto; height: 44px; min-height: 44px; text-align: center; white-space: nowrap; }
+:root .mission .mission__exit { width: auto; min-width: 44px; padding: 0 12px; }
+:root .mission .mission__sound { width: 44px; min-width: 44px; padding: 0; font-family: sans-serif; font-size: 18px; }
+:root .mission .mission__label { display: grid; gap: 8px; font: 15px/1.6 Inter, var(--font, sans-serif); }
+:root .mission .mission__label output { color: var(--mission-link); }
+:root .mission .mission__blocks { position: relative; display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin-top: 6px; }
+:root .mission .mission__blocks > button { height: 32px; background: var(--px-card, var(--panel)); border: 2px solid var(--px-line-soft, var(--line2, #3f3f46)); }
+:root .mission .mission__blocks .is-filled:not(.is-correct):not(.is-wrong) { background: var(--px-fill, #7c3aed); border-color: var(--px-fill, #7c3aed); }
+:root .mission .mission__slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 48px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--px-fill, #7c3aed);
+}
+:root .mission .mission__slider::-webkit-slider-runnable-track { height: 8px; background: var(--px-fill, #7c3aed); border: 2px solid var(--px-line-soft, var(--line2, #3f3f46)); }
+:root .mission .mission__slider::-moz-range-track { height: 4px; background: var(--px-fill, #7c3aed); border: 2px solid var(--px-line-soft, var(--line2, #3f3f46)); }
+:root .mission .mission__slider::-webkit-slider-thumb { appearance: none; box-sizing: border-box; width: 24px; height: 24px; margin-top: -10px; border: 2px solid var(--px-line, var(--ink)); border-radius: 0; background: var(--px-fill, #7c3aed); box-shadow: 2px 2px 0 var(--px-shadow, #000); }
+:root .mission .mission__slider::-moz-range-thumb { box-sizing: border-box; width: 24px; height: 24px; border: 2px solid var(--px-line, var(--ink)); border-radius: 0; background: var(--px-fill, #7c3aed); box-shadow: 2px 2px 0 var(--px-shadow, #000); }
+:root .mission .mission__slider:disabled { opacity: .55; cursor: default; }
+:root .mission .mission__select { min-height: 48px; width: 100%; padding: 10px; border: 2px solid var(--px-line, var(--ink)); border-radius: 0; background: var(--panel); color: var(--ink); font: 16px var(--font, sans-serif); }
+:root .mission .mission__hint { margin: 0; font-size: 15px; }
+:root .mission .mission__link, :root .mission .mission__typing-skip { background: transparent; border-color: transparent; box-shadow: none; text-decoration: underline; font-size: 12px; }
+:root .mission .mission__typing-skip { margin-bottom: 12px; }
+:root .mission .mission__feedback { display: flex; justify-content: space-between; gap: 10px; margin-top: 22px; font: 700 24px/1.3 Inter, var(--font, sans-serif); }
+:root .mission .mission__feedback strong { font-weight: 700; }
+:root .mission .mission__floating-xp { animation: mission-xp 900ms ease-out both; }
+:root .mission .mission__reveal { font-size: 16px; }
+:root .mission .mission__reveal p { margin: 12px 0; }
+:root .mission .mission__next { width: 100%; margin-top: 16px; }
+
+:root .mission .mission__bar-row { margin-top: 12px; }
+:root .mission .mission__bar-track { height: 20px; margin-top: 4px; border: 2px solid var(--px-line-soft, var(--line2, #3f3f46)); background: var(--panel); }
+:root .mission .mission__bar-fill { display: block; height: 100%; background: var(--px-fill, #7c3aed); }
+:root .mission .mission__bar-row:first-child .mission__bar-fill { background: var(--px-fill, #7c3aed); }
+:root .mission .mission__search { min-width: 0; }
+:root .mission .mission__search :is(input, select, button) { min-height: 48px; max-width: 100%; }
+:root .mission .mission__result { position: relative; min-height: 100%; text-align: center; perspective: 900px; }
+:root .mission .mission__unlock-title { position: relative; z-index: 1; margin: 0 0 12px; font: 400 14px/1.5 var(--mission-pixel); text-transform: uppercase; color: var(--mission-link); overflow-wrap: anywhere; }
+:root .mission .mission__score { margin: 10px 0; font: 800 56px/1.1 Inter, var(--font, sans-serif); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+:root .mission .mission__badge { display: inline-block; margin: 10px 0 18px; padding: 5px 8px; background: var(--mission-tint); color: var(--ink); font: 400 12px/1.5 var(--mission-pixel); }
+:root .mission .mission__card { position: relative; min-width: 0; margin: 16px 0 24px; border: 2px solid var(--px-line, var(--ink)); border-radius: 0; box-shadow: 3px 3px 0 var(--px-shadow, #000); transform-origin: center; animation: mission-flip 700ms ease-out both; }
+:root .mission .mission__burst { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+:root .mission .mission__particle { position: absolute; top: 35%; left: 50%; width: 8px; height: 8px; background: var(--px-fill, #7c3aed); animation: mission-burst 700ms steps(10) both; }
+:root .mission .mission__particle:nth-child(3n) { background: var(--px-tint, #241a40); }
+:root .mission .mission__particle:nth-child(3n + 1) { background: var(--px-fill, #7c3aed); }
+:root .mission .mission__sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+@keyframes mission-xp { from { transform: translateY(8px); opacity: 0; } 25% { opacity: 1; } to { transform: translateY(-10px); opacity: 1; } }
+@keyframes mission-flip { from { transform: rotateY(180deg); opacity: 0; } to { transform: rotateY(0); opacity: 1; } }
+@keyframes mission-burst { from { transform: translate(-50%, -50%); opacity: 1; } to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+
+@media (max-width: 860px) {
+  :root .mission .mission__hud { padding: 0 4px; gap: 4px; }
+  :root .mission .mission__logo { font-size: 12px; max-width: 68px; line-height: 1.2; }
+  :root .mission .mission__level { font-size: 12px; }
+  :root .mission .mission__xp { gap: 4px; }
+  :root .mission .mission__segment { width: 12px; height: 12px; }
+  :root .mission .mission__tools { gap: 4px; }
+  :root .mission .mission__stars { gap: 2px; max-width: 20px; flex-wrap: wrap; }
+  :root .mission .mission__panel { left: 50%; bottom: 0; width: 100%; max-width: 100%; max-height: min(65%, calc(100% - 56px)); padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  :root .mission .mission__question { font-size: 18px; margin-bottom: 12px; }
+  :root .mission .mission__unlock-title { font-size: 14px; }
+  :root .mission .mission__button:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--px-shadow, #000); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .mission *, :root .mission *::before, :root .mission *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  :root .mission .mission__burst { display: none; }
+  :root .mission .mission__card, :root .mission .mission__button:active:not(:disabled) { transform: none; }
+}
+
+/* Marcas del deslizador alineadas: ✓/✗ dentro del bloque y la etiqueta "Respuesta" centrada sobre el correcto */
+:root .mission .mission__blocks.is-answered { margin-top: 36px; }
+:root .mission .mission__blocks.is-answered > button { height: 26px; display: grid; place-items: center; }
+:root .mission .mission__blocks .is-correct::after { content: '✓'; font: 700 14px/1 Inter, var(--font, sans-serif); }
+:root .mission .mission__blocks .is-wrong::after { content: '✗'; font: 700 14px/1 Inter, var(--font, sans-serif); }
+:root .mission .mission__blocks .is-correct[data-label]::before { left: 50%; right: auto; transform: translateX(-50%); }
+:root .mission .mission__blocks > :first-child.is-correct[data-label]::before { left: 0; transform: none; }
+:root .mission .mission__blocks > :last-child.is-correct[data-label]::before { left: auto; right: 0; transform: none; }
+:root .mission .mission__blocks .is-wrong[data-label]::before { display: none; }
+
+/* Acciones principales y opciones comparten la misma geometría píxel. */
+:root .mission .mission__button:is(.mission__primary, .mission__submit, .mission__next) {
+  min-height: 52px; background: var(--px-fill, #7c3aed) !important; color: var(--px-on-fill, #fff) !important;
+  border: 2px solid var(--px-fill, #7c3aed) !important; text-align: center; font-weight: 600 !important;
+}
+:root .mission .mission__button:is(.mission__primary, .mission__submit, .mission__next):hover:not(:disabled) { background: var(--px-fill-hover, #6d28d9) !important; border-color: var(--px-fill-hover, #6d28d9) !important; filter: none; }
+:root .mission .mission__panel > .mission__controls:not(:has(> :not(button))) > button.mission__button:not(.mission__submit):not(.mission__next):not(.mission__primary):not(.mission__ghost):not(.mission__link):not(.mission__typing-skip) {
+  min-height: 48px; text-align: left; justify-content: flex-start; font-weight: 600;
+  border: 2px solid var(--px-line, var(--ink));
+}
+:root .mission .mission__button:is(.is-selected, [aria-pressed="true"], [aria-selected="true"]):not(.is-correct):not(.is-wrong) { background: var(--mission-tint) !important; border: 2px solid var(--px-fill, #7c3aed) !important; }
+:root .mission .mission__button:is(.mission__link, .mission__typing-skip) {
+  background: transparent; border: 0; color: var(--mission-link); box-shadow: none;
+  font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px;
+}
+:root .mission .mission__answer { display: inline-block; padding: 5px 8px; border: 0; background: var(--mission-correct-bg); color: var(--mission-correct-text); font: 400 11px/1.5 var(--mission-pixel); text-transform: uppercase; }
+:root .mission .mission__feedback--wrong + .mission__reveal .mission__answer { background: var(--mission-wrong-bg); color: var(--mission-wrong-text); }
+/* El pie fijo pertenece al panel y conserva un fondo sólido. */
+:root .mission .mission__next { position: sticky; bottom: 0; z-index: 2; }
+:root .mission .mission__next::before { content: ''; position: absolute; inset: -12px -2px auto; height: 10px; background: var(--panel); border-top: 2px solid var(--px-line-soft, var(--line2, #3f3f46)); pointer-events: none; }
+/* Los símbolos y el texto identifican la respuesta sin depender del color. */
+:root .mission .mission__button.is-correct,
+:root .mission .mission__blocks .is-correct {
+  color: var(--mission-correct-text) !important;
+  background: var(--mission-correct-bg) !important;
+  border: 2px solid var(--mission-correct-border) !important;
+  box-shadow: none;
+  opacity: 1;
+}
+:root .mission .mission__button.is-wrong,
+:root .mission .mission__blocks .is-wrong {
+  color: var(--mission-wrong-text) !important;
+  background: var(--mission-wrong-bg) !important;
+  border: 2px solid var(--mission-wrong-border) !important;
+  box-shadow: none;
+  opacity: 1;
+}
+:root .mission .mission__button.is-muted { opacity: 1; color: var(--muted, var(--ink)); box-shadow: none; }
+:root .mission .mission__feedback--correct { color: var(--mission-correct-text); }
+:root .mission .mission__feedback--almost { color: var(--mission-almost); }
+:root .mission .mission__feedback--wrong { color: var(--mission-wrong-text); }
+
+:root .mission .mission__xp[aria-valuetext*="; 0 "] .mission__segment:nth-child(1) { outline: 2px solid var(--px-line); outline-offset: 2px; }
+:root .mission .mission__xp[aria-valuetext*="; 1 "] .mission__segment:nth-child(-n + 1) { background: var(--px-fill); border-color: var(--px-fill); }
+:root .mission .mission__xp[aria-valuetext*="; 1 "] .mission__segment:nth-child(2) { outline: 2px solid var(--px-line); outline-offset: 2px; }
+:root .mission .mission__xp[aria-valuetext*="; 2 "] .mission__segment:nth-child(-n + 2) { background: var(--px-fill); border-color: var(--px-fill); }
+:root .mission .mission__xp[aria-valuetext*="; 2 "] .mission__segment:nth-child(3) { outline: 2px solid var(--px-line); outline-offset: 2px; }
+:root .mission .mission__xp[aria-valuetext*="; 3 "] .mission__segment:nth-child(-n + 3) { background: var(--px-fill); border-color: var(--px-fill); }
+:root .mission .mission__xp[aria-valuetext*="; 3 "] .mission__segment:nth-child(4) { outline: 2px solid var(--px-line); outline-offset: 2px; }
+:root .mission .mission__xp[aria-valuetext*="; 4 "] .mission__segment:nth-child(-n + 4) { background: var(--px-fill); border-color: var(--px-fill); }
+:root .mission .mission__xp[aria-valuetext*="; 4 "] .mission__segment:nth-child(5) { outline: 2px solid var(--px-line); outline-offset: 2px; }
+:root .mission .mission__xp[aria-valuetext*="; 5 "] .mission__segment:nth-child(-n + 5) { background: var(--px-fill); border-color: var(--px-fill); }
+
+/* La pregunta se muestra completa y el pie sigue al alcance durante el desplazamiento. */
+:root .mission .mission__question { white-space: normal; overflow: visible; overflow-wrap: anywhere; max-height: none; -webkit-line-clamp: unset; }
+:root .mission .mission__footer { position: sticky; bottom: calc(-22px - env(safe-area-inset-bottom, 0px)); z-index: 3; margin: 16px -22px calc(-22px - env(safe-area-inset-bottom, 0px)); padding: 12px 22px calc(22px + env(safe-area-inset-bottom, 0px)); background: var(--panel); border-top: 2px solid var(--px-line-soft); }
+:root .mission .mission__footer .mission__next { position: static; margin: 0; }
+:root .mission .mission__footer .mission__next::before { content: none; }
+:root .mission .mission__blocks > button { appearance: none; min-width: 0; padding: 0; border-radius: 0; cursor: pointer; touch-action: manipulation; color: var(--ink); font: inherit; }
+:root .mission .mission__blocks > button:disabled { cursor: default; }
+:root .mission .mission__sound { display: grid; place-items: center; }
+:root .mission .mission__bar-scale { display: flex; justify-content: space-between; font-size: 12px; font-variant-numeric: tabular-nums; }
+/* El color se revela únicamente después de responder a la pregunta del mapa. */
+body.game-neutral-map #g-states path { fill: var(--card2) !important; stroke: var(--px-line-soft) !important; }
+@media (max-width: 860px) {
+  :root .mission .mission__footer { bottom: calc(-16px - env(safe-area-inset-bottom, 0px)); margin: 16px -16px calc(-16px - env(safe-area-inset-bottom, 0px)); padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+
+:root .mission .mission__score-label { display: block; margin-bottom: 6px; font: 400 15px/1.5 Inter, var(--font, sans-serif); }
+:root .mission .mission__summary-text { display: block; white-space: normal; }
+:root .mission .mission__summary-question, :root .mission .mission__summary-answer { overflow: visible; max-width: none; text-overflow: clip; }
+
+/* Aviso de proyecto independiente al final de la misión */
+.mission__notice{margin:8px 0 0;font-size:12px;color:var(--muted)}
+
+/* Escritorio: el panel nunca invade el encabezado de la misión (HUD ~48px) */
+@media (min-width:861px){
+  :root .mission .mission__panel { max-height: calc(100% - 48px - 16px - 16px); }
+}
+
+/* Frase breve de Pixel junto al resultado de la misión. */
+:root .mission .mission__speech { position: relative; max-width: 320px; margin: 0 auto 18px; padding: 6px 10px; border: 2px solid var(--px-line); border-radius: 0; background: var(--px-card); box-shadow: 3px 3px 0 var(--px-shadow); text-align: left; animation: mission-speech-pop 150ms steps(3) both; }
+:root .mission .mission__speech::before, :root .mission .mission__speech::after { content: ''; position: absolute; width: 6px; height: 6px; background: var(--px-card); border-left: 2px solid var(--px-line); border-bottom: 2px solid var(--px-line); }
+:root .mission .mission__speech::before { left: 18px; bottom: -6px; }
+:root .mission .mission__speech::after { left: 14px; bottom: -10px; }
+:root .mission .mission__speech-label { display: block; font: 400 11px/1.3 var(--pixel); }
+:root .mission .mission__speech-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 2px 0 0; font: 400 14px/1.35 var(--font); }
+@keyframes mission-speech-pop { from { opacity: 0; transform: translateY(4px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { :root .mission .mission__speech { animation: none; } }

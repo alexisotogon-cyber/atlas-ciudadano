@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0a1f">
+<title data-i18n="static.275">Pixel Ciudadano · Atlas ciudadano</title>
+<meta name="description" content="Atlas interactivo de la participación ciudadana en México, por estado y municipio, 2009–2024, con datos de los Conteos Censales del INE. Hecho por Pixel Ciudadano.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pixel Ciudadano">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="Pixel Ciudadano · Atlas ciudadano">
+<meta property="og:description" content="¿Quién vota en México? Explora la participación por estado, municipio, sexo y edad (2009–2024) y descubre el reto rumbo a 2027.">
+<meta property="og:image" content="assets/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Pixel Ciudadano: en 2024 votó el 59.7 % de las personas de la lista nominal">
+<meta name="twitter:card" content="summary_large_image">
+<script>
+// La elección guardada tiene prioridad sobre la preferencia del sistema.
+try {
+  const saved = localStorage.getItem('pc-theme');
+  document.documentElement.dataset.theme = saved === 'light' || saved === 'dark' ? saved : (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+} catch { document.documentElement.dataset.theme = 'dark'; }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<!-- Datos que la portada necesita de inmediato: se piden en paralelo al JS -->
+<link rel="preload" href="assets/estados.json" as="fetch" crossorigin>
+<link rel="preload" href="assets/data/estados.json" as="fetch" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='395 130 505 665'%3E%3Crect x='395' y='130' width='505' height='665' fill='%23fff'/%3E%3Cpath fill='%23430c74' d='M470 435H770V284H875V515H740V785H647V663H608V785H517V545H487V657H405V479H470Z'/%3E%3Crect fill='%23430c74' x='540' y='240' width='172' height='165'/%3E%3Crect fill='%239333ff' x='770' y='142' width='120' height='120'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="card.css?v=73">
+<link rel="stylesheet" href="game.css?v=73">
+<link rel="stylesheet" href="demo.css?v=73">
+<link rel="stylesheet" href="styles.css?v=73">
+<link rel="stylesheet" href="theme-kivo.css?v=73"><!-- tema de prueba: quitar esta línea para volver al estilo anterior -->
+<link rel="stylesheet" href="theme-light.css?v=73">
+<link rel="stylesheet" href="polish.css?v=73">
+<link rel="stylesheet" href="mobile.css?v=73">
+<link rel="stylesheet" href="present.css?v=73">
+<link rel="modulepreload" href="app.js?v=73">
+<script type="module" src="app.js?v=73"></script>
+<style id="fixA">
+.lbl-short{display:none}
+@media(max-width:860px){.rail .lbl-short,.lbl-short{display:inline!important}.rail .lbl-long,.lbl-long{display:none!important}}
+.demo .demo-bubble .demo-step-links{order:4}
+.legend-hint{font-size:11px;margin:4px 0}
+.classroom-kit{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:860px){.mode-home #detail-body{display:flex;flex-direction:column}.mode-home .home-credit{order:-2;margin:0 0 4px;font-size:10px;white-space:nowrap}.mode-home .d-title{order:-1}.mode-home #detail-body>.home-block:first-of-type>.home-sec{display:none}}
+@media print{
+  :root,body{--ink:#000;--muted:#222;--faint:#333;--bg:#fff;--bg2:#fff;--panel:#fff;--card:#fff;--card2:#fff;color:#000!important;background:#fff!important;color-scheme:light}
+  html,body{height:auto!important;overflow:visible!important}
+  .rail,.strip,.tools,.years,.filters,.sheet-handle,.search,.featured,.caption,.legend,.present-bubble,.globe,.loading,.skip,#mission,.mission,.demo,.tut-bubble,.tut-hole,.tut-backdrop,dialog,button,.d-cta,.actions-bar{display:none!important}
+  .atlas{display:flex!important;flex-direction:column!important;height:auto!important;padding:0!important;background:#fff!important}
+  body #detail,body #detail.open{order:0;position:static!important;display:block!important;width:100%!important;max-height:none!important;height:auto!important;overflow:visible!important;background:#fff!important;color:#000!important;box-shadow:none!important}
+  #detail-body{overflow:visible!important;color:#000!important}
+  .center{order:1;position:relative!important;width:100%!important;height:170mm!important;min-height:170mm!important;background:#fff!important;break-inside:avoid}
+  #map{display:block!important;opacity:1!important;width:100%!important;height:100%!important}
+  .center::before,.center::after{display:none!important}
+  #detail *{color:#000!important;text-shadow:none!important;box-shadow:none!important}
+  .home-kpi,.home-bridge,.teaser,.you-cta{background:#fff!important}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body class="mode-home">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="395 130 505 665"><path style="fill:var(--logo-b,#430c74)" d="M470 435H770V284H875V515H740V785H647V663H608V785H517V545H487V657H405V479H470Z"/><rect style="fill:var(--logo-b,#430c74)" x="540" y="240" width="172" height="165"/><rect style="fill:var(--logo-a,#9333ff)" x="770" y="142" width="120" height="120"/></symbol>
+  <pattern id="nodata" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#2a2240"/><rect width="2" height="6" fill="#5a5070"/></pattern>
+</svg>
+<a class="skip" href="#detail" data-i18n="static.276">Ir a la ficha de resultados</a>
+
+<div class="atlas" id="atlas">
+  <!-- ===== Menú lateral ===== -->
+  <nav class="rail" id="rail-nav" aria-label="Menú principal" data-i18n-aria="static.277">
+    <a class="brand" href="./" aria-label="Pixel Ciudadano, inicio" data-i18n-aria="static.278">
+      <span class="brand-mark" aria-hidden="true"><svg class="logo"><use href="#logo"/></svg></span>
+      <span class="brand-text"><strong>Pixel Ciudadano</strong><small data-i18n="static.279">Atlas ciudadano</small></span>
+    </a>
+    <ul class="nav-main">
+      <li><button type="button" class="nav-item" data-nav="home" aria-label="Inicio" data-i18n-aria="static.280"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-house" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg><span data-i18n="static.280">Inicio</span></button></li>
+      <li><button type="button" class="nav-item" data-nav="map" aria-label="Explorar el mapa" data-i18n-aria="text.268"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-map" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" />
+  <path d="M15 5.764v15" />
+  <path d="M9 3.236v15" /></svg><span data-i18n="static.281">Explorar</span></button></li>
+      <li><button type="button" class="nav-item nav-game" data-nav="game" aria-label="Misión 2027, juego" data-i18n-aria="static.282"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-gamepad-2" aria-hidden="true"><line x1="6" x2="10" y1="11" y2="11" />
+  <line x1="8" x2="8" y1="9" y2="13" />
+  <line x1="15" x2="15.01" y1="12" y2="12" />
+  <line x1="18" x2="18.01" y1="10" y2="10" />
+  <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z" /></svg><span class="lbl-long" data-i18n="text.234">Misión 2027</span><span class="lbl-short" data-i18n="fix.railMission">Misión</span></button></li>
+    </ul>
+    <p class="nav-label" id="lbl-regions" data-i18n="static.283">Regiones</p>
+    <ul class="nav-regions" id="regions" aria-labelledby="lbl-regions"></ul>
+    <section class="featured" id="featured" aria-label="Estado destacado" data-i18n-aria="static.284"></section>
+    <button type="button" class="nav-foot" id="about-btn" aria-label="Sobre los datos" data-i18n-aria="static.285"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-info" aria-hidden="true"><circle cx="12" cy="12" r="10" />
+  <path d="M12 16v-4" />
+  <path d="M12 8h.01" /></svg><span class="lbl-long" data-i18n="static.285">Sobre los datos</span><span class="lbl-short" data-i18n="fix.railAbout">Datos</span></button>
+    <button type="button" class="nav-foot nav-help" id="help-btn" aria-label="¿Cómo se usa el mapa?" data-i18n-aria="tut.open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-circle-help" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg><span data-i18n="tut.openShort">¿Cómo se usa?</span></button>
+    <div class="preferences"><button type="button" id="theme-toggle" aria-label="Cambiar a modo claro" title="Cambiar a modo claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-sun" aria-hidden="true"><circle cx="12" cy="12" r="4" />
+  <path d="M12 2v2" />
+  <path d="M12 20v2" />
+  <path d="m4.93 4.93 1.41 1.41" />
+  <path d="m17.66 17.66 1.41 1.41" />
+  <path d="M2 12h2" />
+  <path d="M20 12h2" />
+  <path d="m6.34 17.66-1.41 1.41" />
+  <path d="m19.07 4.93-1.41 1.41" /></svg></button><button type="button" id="lang-toggle" aria-label="Cambiar idioma a inglés">EN</button></div>
+  </nav>
+
+  <!-- ===== Tira superior de cartas ===== -->
+  <header class="strip" aria-label="Estados" data-i18n-aria="static.286">
+    <div class="strip-head"><span id="strip-title" data-i18n="text.30">Todos los estados</span><small id="strip-count">32</small></div>
+    <div class="strip-row" id="strip" role="listbox" aria-label="Estados de México" tabindex="0" data-i18n-aria="static.287"></div>
+  </header>
+
+  <!-- ===== Objeto central ===== -->
+  <main class="center" id="stage" aria-label="Mapa interactivo" tabindex="-1" data-i18n-aria="static.288">
+    <div class="globe" id="globe" aria-hidden="true"></div>
+    <div class="globe-zoom" role="group" aria-label="Zoom del globo"><button type="button" id="g-zin" aria-label="Acercar el globo" data-i18n-aria="globe.zoomIn"></button><button type="button" id="g-zout" aria-label="Alejar el globo" data-i18n-aria="globe.zoomOut"></button></div>
+    <svg id="map" role="img" aria-label="Mapa de México" preserveAspectRatio="xMidYMid meet" data-i18n-aria="static.289">
+      <g id="g-states"></g><g id="g-mpios"></g><g id="g-labels" aria-hidden="true"></g>
+    </svg>
+    <button id="back-mx" type="button" class="back-mx" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span data-i18n="static.293">Ver todo México</span></button>
+    <div class="tools" role="group" aria-label="Controles del mapa" data-i18n-aria="static.290">
+      <button id="zoom-in" type="button" class="tool" aria-label="Acercar" data-i18n-aria="static.291"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-zoom-in" aria-hidden="true"><circle cx="11" cy="11" r="8" />
+  <line x1="21" x2="16.65" y1="21" y2="16.65" />
+  <line x1="11" x2="11" y1="8" y2="14" />
+  <line x1="8" x2="14" y1="11" y2="11" /></svg></button>
+      <button id="zoom-out" type="button" class="tool" aria-label="Alejar" data-i18n-aria="static.292"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-zoom-out" aria-hidden="true"><circle cx="11" cy="11" r="8" />
+  <line x1="21" x2="16.65" y1="21" y2="16.65" />
+  <line x1="8" x2="14" y1="11" y2="11" /></svg></button>
+      <button id="present" type="button" class="tool" aria-pressed="false" aria-label="Modo presentación" title="Modo presentación" data-i18n-aria="present.on" data-i18n-title="present.on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-maximize" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3" />
+  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+  <path d="M16 21h3a2 2 0 0 0 2-2v-3" /></svg></button>
+      <button id="filters-btn" type="button" class="tool" aria-label="Filtros por sexo y edad" aria-expanded="false" aria-controls="filters" data-i18n-aria="static.294"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-sliders-horizontal" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4" />
+  <line x1="10" x2="3" y1="4" y2="4" />
+  <line x1="21" x2="12" y1="12" y2="12" />
+  <line x1="8" x2="3" y1="12" y2="12" />
+  <line x1="21" x2="16" y1="20" y2="20" />
+  <line x1="12" x2="3" y1="20" y2="20" />
+  <line x1="14" x2="14" y1="2" y2="6" />
+  <line x1="8" x2="8" y1="10" y2="14" />
+  <line x1="16" x2="16" y1="18" y2="22" /></svg><i id="filters-dot" hidden></i></button>
+    </div>
+    <div class="filters" id="filters" hidden role="dialog" aria-label="Filtros" data-i18n-aria="static.295">
+      <p data-i18n="static.296">Sexo</p><div class="chips" id="sex" role="radiogroup" aria-label="Sexo" data-i18n-aria="static.296"></div>
+      <p data-i18n="static.297">Edad</p><div class="chips" id="age" role="radiogroup" aria-label="Edad" data-i18n-aria="static.297"></div>
+    </div>
+    <div class="legend" id="legend" aria-label="Leyenda de colores" data-i18n-aria="static.298"></div>
+    <p class="caption" id="caption" aria-live="polite"></p>
+    <div class="home-cta" role="group" aria-label="Empezar" data-i18n-aria="home.ctaGroup">
+      <button type="button" class="btn-primary" id="cta-explore"><span class="lbl" data-i18n="home.btnExplore">Explorar el mapa</span><span class="cap" aria-hidden="true"></span></button>
+      <button type="button" class="btn-ghost" id="cta-game" data-i18n="home.btnGame">Jugar Misión 2027</button>
+    </div>
+    <div class="years" id="years" role="group" aria-label="Elección" data-i18n-aria="static.299">
+      <button type="button" id="y-prev" aria-label="Elección anterior" data-i18n-aria="static.300"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-chevron-left" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></button>
+      <div class="y-now"><b id="y-val">2024</b><span id="y-kind" data-i18n="text.5">Presidencial</span></div>
+      <button type="button" id="y-next" aria-label="Elección siguiente" data-i18n-aria="static.301"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-chevron-right" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></button>
+      <button type="button" id="play" class="play" aria-label="Ver cómo cambió de 2009 a 2024" data-i18n-aria="text.41"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-play" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3" /></svg></button>
+    </div>
+    <div id="tooltip" class="tooltip" hidden></div>
+    <div id="loading" class="loading" role="status"><span class="spinner"></span><span data-i18n="static.302">Preparando el atlas…</span></div>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <div id="mission" class="mission-host"></div>
+  </main>
+
+  <!-- ===== Ficha de detalle ===== -->
+  <aside class="detail" id="detail" aria-label="Ficha" tabindex="-1" data-i18n-aria="static.303">
+    <button type="button" class="sheet-handle" aria-controls="detail" aria-expanded="false" aria-label="Abrir o cerrar la ficha" data-i18n-aria="sheet.toggle"></button>
+    <form class="search" id="search" role="search" autocomplete="off">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-search" aria-hidden="true"><circle cx="11" cy="11" r="8" />
+  <path d="m21 21-4.3-4.3" /></svg>
+      <input id="q" type="search" placeholder="Busca tu estado o municipio" aria-label="Busca tu estado o municipio" aria-controls="q-results" data-i18n-aria="static.304" data-i18n-ph="static.304">
+      <ul id="q-results" class="search-results" role="listbox" aria-label="Resultados de búsqueda" hidden data-i18n-aria="static.305"></ul>
+    </form>
+    <div class="detail-body" id="detail-body"></div>
+    <p class="detail-foot" data-i18n="static.306">Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024 · Mapas: INEGI · Hecho por Pixel Ciudadano · No es un sitio oficial del INE. · Íconos: Lucide (ISC)</p>
+  </aside>
+</div>
+
+<dialog id="card-dialog" aria-label="Carta del estado" data-i18n-aria="text.112">
+  <div class="card-dialog-in"><button type="button" class="dlg-x" data-close aria-label="Cerrar" data-i18n-aria="static.307"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-x" aria-hidden="true"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button><div id="card-dialog-host"></div></div>
+</dialog>
+
+<dialog id="you-dialog" class="you" aria-labelledby="you-t">
+  <button type="button" class="dlg-x" data-close aria-label="Cerrar" data-i18n-aria="static.307"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-x" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg></button>
+  <div class="you-body"></div>
+</dialog>
+<dialog id="about" aria-labelledby="about-t">
+  <form method="dialog">
+    <button class="dlg-x" aria-label="Cerrar" data-i18n-aria="static.307"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lc lc-x" aria-hidden="true"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button>
+    <h2 id="about-t" data-i18n="static.285">Sobre los datos</h2>
+    <ul>
+      <li><b data-i18n="static.308">Qué mide.</b><span data-i18n="static.309"> De cada 100 personas en la lista nominal (con credencial vigente) de una zona, cuántas fueron a votar en las elecciones federales de 2009 a 2024.</span></li>
+      <li><b data-i18n="static.310">Fuente.</b> <a href="https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/" target="_blank" rel="noreferrer" data-i18n="static.311">Conteos Censales de Participación Ciudadana del INE</a><span data-i18n="static.312">. Datos: elecciones 2009–2024 · versión del sitio: octubre de 2026.</span></li>
+      <li><b data-i18n="static.313">Cálculo.</b><span data-i18n="static.314"> Votaron ÷ (lista nominal − registros no especificados). No incluye casillas especiales ni voto desde el extranjero, por eso puede diferir un poco de los cómputos distritales. Coincide con la Tabla General oficial del INE en los 32 estados.</span></li>
+      <li><b data-i18n="about.coverageT">Cobertura.</b><span data-i18n="about.coverage"> Los Conteos Censales salen de los cuadernillos de las casillas ordinarias. No incluyen casillas especiales, voto desde el extranjero ni las modalidades de 2024 de voto anticipado y en prisión preventiva (unos 30 mil votos, publicados aparte). Por eso pueden diferir de los cómputos distritales.</span></li>
+      <li><b data-i18n="about.defsT">Definiciones.</b><span data-i18n="about.defs"> «Jóvenes» son las personas de 18 a 29 años (el tablero del INE llama «Juventud» a las de 18 a 24). Las diferencias son puntos porcentuales y se calculan a partir de las cifras redondeadas que se muestran, para que la resta siempre coincida. Los escenarios de «Rumbo a 2027» son hipotéticos.</span></li>
+      <li><b data-i18n="about.checkT">Verificación.</b><span data-i18n="about.check"> Los archivos que usamos tienen la misma huella SHA-256 que los publicados por el INE. Las cifras de 2024 de los 32 estados coinciden con la Tabla General de los Conteos Censales 2024 del INE. Cada cifra del sitio se recalculó de forma independiente, con scripts, a partir de los CSV oficiales.</span></li>
+      <li><b data-i18n="static.315">Municipios.</b><span data-i18n="static.316"> Los datos del INE se unieron a los mapas del INEGI por nombre de municipio. Los municipios con menos de 100 registros en un grupo no se muestran y los de menos de 500 llevan aviso de "pocos registros". Los municipios creados en 2024 (Eldorado y Juan José Ríos, Sinaloa) aún no tienen mapa.</span></li>
+      <li><b data-i18n="static.317">Quién lo hizo.</b><span data-i18n="static.318"> Equipo Pixel Ciudadano, hackatón del INE 2026 (Reto 3). No es un sitio oficial del INE. Ilustraciones generadas con IA para el proyecto. Sin datos personales. Íconos: Lucide (ISC).</span></li>
+      <li><b data-i18n="static.319">Cómo citar.</b><span data-i18n="static.320"> Pixel Ciudadano (2026). </span><i data-i18n="static.321">Atlas ciudadano: participación electoral en México</i><span data-i18n="static.322">, con datos del INE (CCPC 2009–2024).</span></li>
+      <li data-i18n="legend.noData"></li>
+    </ul>
+    <p class="classroom-kit">
+      <button type="button" class="btn-ghost" id="national-csv" data-i18n="about.download"></button>
+      <button type="button" class="btn-ghost" id="dictionary-csv" data-i18n="about.dictionary"></button>
+      <button type="button" class="btn-ghost" id="print-view" data-i18n="about.print"></button>
+    </p>
+    <button class="btn-primary" data-i18n="static.323">Entendido</button>
+  </form>
+</dialog>
+</body>
+</html>

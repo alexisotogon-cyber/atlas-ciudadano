@@ -1,0 +1,62 @@
+/* Tema de prueba inspirado en "Kivo" (Inter + JetBrains Mono, esquinas rectas, botones claros).
+   Para volver al tema anterior basta con quitar el <link> de este archivo en index.html. */
+:root{
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;--head:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+  --bg:#09090b;--bg2:#0b0b0d;--panel:#0f0f11;--card:#141416;--card2:#18181b;--line:#27272a;--line2:#3f3f46;
+  --ink:#f4f4f5;--muted:#a1a1aa;--faint:#71717a;--accent:#8b5cf6;--accent2:#c4b5fd;--r:0px;
+}
+body{font-family:var(--font);background:var(--bg)}
+.atlas{background:var(--bg);gap:0;padding:0}
+/* Paneles con esquinas rectas y líneas finas, como una retícula */
+.rail,.strip,.center,.detail{border-radius:0;border:0;border-right:1px solid var(--line);background:var(--panel)}
+.strip{border-bottom:1px solid var(--line)}
+.detail{border-left:1px solid var(--line);border-right:0}
+.center{background:var(--bg2);border-right:0}
+.center:before{opacity:.5;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:64px 64px;-webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000 20%,transparent 75%);mask-image:radial-gradient(70% 70% at 50% 50%,#000 20%,transparent 75%)}
+/* Títulos: Inter normal, apretado */
+.d-title,.tc-name,.sec,#about h2,.brand-text strong,.feat-t{font-family:var(--head);font-weight:400;letter-spacing:-.025em}
+.d-title{font-size:34px;line-height:1.15}.d-title.xl{font-size:40px;line-height:1.1}
+.d-title em{font-family:var(--head);font-style:normal;font-weight:400;font-size:1em;letter-spacing:-.025em;color:var(--muted)}
+.tc-name{font-size:26px}.sec{font-size:18px;letter-spacing:-.015em}
+.caption{font-family:var(--head);font-style:normal;font-weight:400;letter-spacing:-.02em;color:var(--ink)}
+/* Etiquetas y textos auxiliares en la fuente de lectura */
+.eyebrow,.strip-head,.nav-label,.chip,.d-meta,.tc-ctx,.sc-top .rt,.y-now span,.legend .ticks span,.t-l small,.brand-text small,.list-toggle small,.feat-k{font-family:var(--font);font-weight:400;letter-spacing:0;text-transform:none}
+.eyebrow{font-size:12px;color:var(--muted)}
+.strip-head{font-size:11px}
+.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.t-v,.tc-hp,.y-now b{font-family:var(--font);font-weight:500;letter-spacing:-.02em}
+.chip{border-radius:0;background:var(--card2);border:0;padding:6px 10px;font-size:12px}
+/* Los botones comparten el sistema definido en polish.css. */
+.menu summary{border-radius:0;border-color:var(--line)}
+.menu-pop{border-radius:0;border-color:var(--line)}
+/* Controles y tarjetas rectos */
+.search,.search-results,.tool,.years,.legend,.filters,.scard,.tcard,.list-toggle,.more,.seg,.seg button,#m-q,.chips button,.notice,.tooltip,dialog,.dlg-x,.nav-item,.nav-region,.nav-foot,.brand-mark,.t-ic,.mcard,.mini{border-radius:0}
+.search{background:var(--card);border-color:var(--line)}
+.scard{border-color:var(--line)}
+.scard[aria-selected=true]{box-shadow:inset 0 -2px 0 var(--ink);border-color:var(--line2)}
+.tcard{border-color:var(--line)}
+.tool,.years,.legend{background:var(--panel);border-color:var(--line)}
+.nav-item[aria-current=page],.nav-region[aria-pressed=true]{background:var(--card);box-shadow:none}
+.t-bar,.t-bar i{border-radius:0}
+.list-toggle{border:1px solid var(--line);background:transparent}
+.tooltip{background:#f4f4f5}
+
+/* Preferencias persistentes y contraste del tema oscuro. */
+:root { color-scheme: dark; --map-stroke: #0e0a1f; --faint: #a1a1aa; }
+html, body { background: var(--bg); }
+#map path { stroke: var(--map-stroke); }
+.lc { flex-shrink: 0; fill: none !important; stroke-width: 1.75; vertical-align: middle; }
+.years > button .lc, .dlg-x .lc { width: 18px; height: 18px; }
+.preferences { display: flex; gap: 6px; margin-top: 6px; }
+.preferences button { display: inline-grid; place-items: center; min-width: 42px; min-height: 42px; border: 1px solid var(--line2); background: var(--card); color: var(--ink); font: 600 12px var(--font); cursor: pointer; }
+.preferences button:hover { background: var(--card2); }
+.preferences button:focus-visible { outline: 2px solid var(--accent2); outline-offset: 3px; }
+.preferences svg { width: 19px; height: 19px; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { z-index: 100; }
+@media (max-width: 1100px) { .preferences { flex-wrap: wrap; justify-content: center; } }
+@media (max-width: 860px) {
+  .preferences { flex-wrap: nowrap; margin: 0; gap: 3px; }
+  .preferences button { min-width: 36px; min-height: 44px; }
+  .rail .nav-item, .rail .nav-foot { padding-inline: 4px; font-size: 9px; }
+}

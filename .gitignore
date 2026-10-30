@@ -1,0 +1,10 @@
+.sites-runtime/
+.DS_Store
+tmp/
+
+# Configuración local y notas internas (no se publican)
+.openai/
+tmp/
+entregables/analisis-gemini.md
+entregables/plan-mejoras.md
+entregables/bases-y-datos.md

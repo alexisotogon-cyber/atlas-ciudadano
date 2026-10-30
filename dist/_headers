@@ -1,0 +1,23 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: SAMEORIGIN
+
+/*.html
+  Cache-Control: no-cache
+
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/estados/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/data/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/assets/mpios/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

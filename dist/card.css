@@ -1,0 +1,90 @@
+.pcard {
+  --c: #c084fc;
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 22px;
+  background: linear-gradient(#160b29, #1c1030) padding-box, linear-gradient(135deg, #efe7fa, var(--c) 24%, #ffffff1a 52%, var(--c) 80%, #efe7fa) border-box;
+  color: #efe7fa;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--c) 35%, transparent);
+  font-family: 'DM Sans', sans-serif;
+  text-align: left;
+  overflow: hidden;
+  transform-origin: center;
+}
+.pcard.holo::after {
+  content: '';
+  position: absolute;
+  inset: -70%;
+  z-index: 3;
+  background: conic-gradient(from 0deg, transparent, #75e4ff, transparent 24%, #f9a8d4, transparent 52%, #fef08a, transparent 78%, #c084fc, transparent);
+  mix-blend-mode: color-dodge;
+  opacity: .25;
+  animation: pcard-foil 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes pcard-foil { to { transform: rotate(360deg); } }
+.pcard.pcard--leaving { position: absolute; inset: 0 0 auto; pointer-events: none; z-index: 1; }
+.pcard *, .pcard *::before, .pcard *::after { box-sizing: border-box; }
+.pcard p, .pcard h2 { margin: 0; }
+.pcard .pcard__header { position: absolute; inset: 2px 2px auto; z-index: 2; display: flex; align-items: center; gap: 6px; padding: 2px 6px 2px 10px; min-height: 44px; }
+.pcard .pcard__pill, .pcard .pcard__rank { border: 1px solid #ffffff1a; background: #160b29d9; border-radius: 999px; padding: 4px 7px; font-size: 10px; line-height: 1.25; }
+.pcard .pcard__election { margin-left: auto; }
+.pcard .pcard__button { min-width: 40px; min-height: 40px; border: 1px solid #ffffff1a; border-radius: 10px; background: #ffffff1a; color: #efe7fa; font: inherit; font-size: 12px; cursor: pointer; padding: 6px 8px; }
+.pcard .pcard__button:hover { background: color-mix(in srgb, var(--c) 25%, #160b29); }
+.pcard .pcard__button:focus-visible { outline: 2px solid #efe7fa; outline-offset: -3px; }
+.pcard .pcard__button--close { background: transparent; border-color: transparent; font-size: 24px; padding: 0; }
+.pcard .pcard__art { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #1c1030; }
+.pcard .pcard__art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
+.pcard .pcard__art::after { content: ''; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent, #190d2c); pointer-events: none; }
+.pcard .pcard__art--fallback {
+  background-color: #1c1030;
+  background-image: linear-gradient(color-mix(in srgb, var(--c) 14%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--c) 14%, transparent) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+.pcard .pcard__silhouette { position: absolute; right: 10px; bottom: 8px; width: min(84px, 30%); height: 84px; z-index: 1; fill: var(--c); stroke: #ffffffb3; stroke-width: 1; filter: drop-shadow(0 3px 5px #000a); }
+.pcard .pcard__body { position: relative; padding: 0 13px; }
+.pcard .pcard__name-row { display: flex; align-items: center; gap: 8px; margin-top: -2px; }
+.pcard .pcard__name-row > div { min-width: 0; flex: 1; }
+.pcard .pcard__name { font-family: var(--display, 'Sora', sans-serif); font-weight: 800; font-size: 26px; line-height: 1.15; overflow-wrap: anywhere; }
+.pcard .pcard__capital { font-size: 13px; color: #b9a8cf; line-height: 1.4; overflow-wrap: anywhere; }
+.pcard .pcard__rank { max-width: 38%; text-align: right; flex-shrink: 0; }
+.pcard .pcard__hp { margin: 7px 0 10px; }
+.pcard .pcard__rate-row { display: flex; align-items: center; gap: 10px; }
+.pcard .pcard__rate { font-family: var(--display, 'Sora', sans-serif); font-size: 44px; line-height: 1.2; font-weight: 800; white-space: nowrap; }
+.pcard .pcard__percent { font-size: 22px; margin-left: 3px; color: var(--c); }
+.pcard .pcard__rate-text { font-size: 12px; line-height: 1.3; color: #b9a8cf; }
+.pcard .pcard__bar, .pcard .pcard__stat-bar { background: #ffffff1a; border-radius: 10px; height: 6px; overflow: hidden; }
+.pcard .pcard__bar > span, .pcard .pcard__stat-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--c); }
+.pcard .pcard__delta { font-size: 11px; line-height: 1.4; color: #b9a8cf; margin-top: 4px; }
+.pcard .pcard__delta--positive { color: #86efac; }
+.pcard .pcard__delta--negative { color: #fda4af; }
+.pcard .pcard__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.pcard .pcard__stat { display: grid; grid-template-columns: 13px minmax(0, 1fr) auto; align-items: center; gap: 4px; border-radius: 8px; padding: 6px; background: #ffffff1a; font-size: 10px; }
+.pcard .pcard__icon { width: 12px; height: 12px; color: var(--stat); shape-rendering: crispEdges; }
+.pcard .pcard__stat-label { overflow-wrap: anywhere; color: #b9a8cf; }
+.pcard .pcard__stat-value { font-size: 11px; }
+.pcard .pcard__stat-bar { grid-column: 1 / -1; height: 3px; }
+.pcard .pcard__stat-bar > span { background: var(--stat); }
+.pcard .pcard__footer { padding-top: 8px; }
+.pcard .pcard__gender { font-size: 13px; line-height: 1.35; color: #b9a8cf; }
+.pcard .pcard__trend { display: block; width: 100%; height: 54px; margin-top: 3px; overflow: visible; }
+.pcard .pcard__gridline { stroke: #ffffff1a; stroke-dasharray: 3 3; }
+.pcard .pcard__trendline { fill: none; stroke: var(--c); stroke-width: 1.5; }
+.pcard .pcard__point { fill: var(--c); stroke: var(--c); stroke-width: 1.5; }
+.pcard .pcard__point--hollow { fill: #1c1030; }
+.pcard .pcard__trend text { fill: #b9a8cf; font-size: 9px; font-family: 'DM Sans', sans-serif; }
+.pcard .pcard__note { font-size: 11px; line-height: 1.35; color: #b9a8cf; margin-top: 4px; }
+.pcard .pcard__actions { display: flex; align-items: stretch; gap: 5px; padding: 8px 9px 9px; }
+.pcard .pcard__button--mpios, .pcard .pcard__button--share { flex: 1; min-width: 0; }
+.pcard .pcard__button--prev, .pcard .pcard__button--next { font-size: 24px; padding: 0; }
+@media (prefers-reduced-motion: reduce) { .pcard.holo::after { animation-play-state: paused; } }
+/* Con pósters: el título ya viene en la imagen; la silueta y las etiquetas no se enciman */
+.pcard .pcard__silhouette { display: none; }
+.pcard .pcard__header { position: static; padding: 6px 8px 6px 10px; min-height: 0; }
+.pcard .pcard__art::after { inset: 70% 0 0; }
