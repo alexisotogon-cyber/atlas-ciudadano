@@ -9,7 +9,7 @@ export async function drawShareCard(spec) {
   const g = canvas.getContext('2d');
   if (!g) throw new Error('canvas');
   try {
-    await Promise.all(['400 40px Inter', '600 64px Inter', '700 210px Inter'].map(font => document.fonts.load(font)));
+    await Promise.all(['400 40px Inter', '600 64px Inter', '700 250px Inter'].map(font => document.fonts.load(font)));
   } catch { /* La fuente de respaldo permite generar la tarjeta sin Inter. */ }
   g.fillStyle = '#0f0f11';
   g.fillRect(0, 0, 1080, 1920);
@@ -75,15 +75,18 @@ export async function drawShareCard(spec) {
     g.fillStyle = color;
     fit(label, weight, size, 72, y, 936, family);
   } });
-  text(String(spec.kicker ?? '').toUpperCase(), 400, 30, 36, '#a1a1aa', 'ui-monospace, monospace');
-  text(spec.title, 600, 56, 66, '#f4f4f5');
-  if (spec.subtitle) text(spec.subtitle, 400, 34, 42, '#a1a1aa');
-  text(spec.valueText ?? (spec.value == null ? '—' : String(spec.value)), 700, 180, 192, '#f4f4f5');
-  rows.push({ height: 12, draw(y) {
+  text(String(spec.kicker ?? '').toUpperCase(), 400, 32, 40, '#a1a1aa', 'ui-monospace, monospace');
+  text(spec.title, 700, 84, 98, '#f4f4f5');
+  // El subtítulo solo aparece si hay un grupo filtrado (no repite "todas las personas")
+  if (spec.subtitle && !/^(todas las personas|all people|everyone)/i.test(spec.subtitle)) text(spec.subtitle, 600, 46, 56, '#c4b5fd');
+  text(spec.valueText ?? (spec.value == null ? '—' : String(spec.value)), 700, 250, 262, '#f4f4f5');
+  rows.push({ height: 14, draw(y) {
     g.fillStyle = spec.color || '#c4b5fd';
-    g.fillRect(72, y, 240, 12);
+    g.fillRect(72, y, 300, 14);
   } });
-  text(spec.valueLabel, 400, 34, 44, '#d4d4d8');
+  // «6 de cada 10 … votaron» explica la cifra mejor que «votó»; si existe, la sustituye
+  const tenth = (spec.lines || []).find(line => /de cada 10|in 10|out of 10/i.test(String(line)));
+  text(tenth || spec.valueLabel, 600, 44, 54, '#d4d4d8');
   if (spec.people != null) rows.push({ height: 88, draw(y) {
     const count = Math.max(0, Math.min(10, Math.round(spec.people)));
     const path = new Path2D(PERSON);
@@ -96,12 +99,14 @@ export async function drawShareCard(spec) {
       g.restore();
     }
   } });
-  for (const line of (spec.lines || []).slice(0, 3)) text(line, 400, 32, 38, '#d4d4d8');
-  text(spec.cta, 700, 48, 60, '#c4b5fd');
-  text(spec.urlText || '', 400, 30, 36, '#a1a1aa');
+  // Una sola comparación: la que dice si está arriba o abajo del país
+  const lines = spec.lines || [];
+  const key = lines.find(line => /^[▲▼]/.test(String(line))) || lines.find(line => line !== tenth);
+  if (key) text(key, 600, 42, 52, '#f4f4f5');
+  // Solo el dato: sin invitación ni dirección del sitio
   // Los espacios se comprimen cuando hay subtítulo, pictograma y tres comparaciones.
   const height = rows.reduce((sum, row) => sum + row.height, 0);
-  const gap = Math.max(0, Math.min(20, (1780 - 980 - height) / (rows.length - 1)));
+  const gap = Math.max(8, Math.min(40, (1780 - 980 - height) / (rows.length - 1)));
   let y = 980;
   for (const row of rows) {
     row.draw(y);
@@ -110,9 +115,9 @@ export async function drawShareCard(spec) {
   g.fillStyle = '#3f3f46';
   g.fillRect(72, 1812, 936, 1);
   g.fillStyle = '#a1a1aa';
-  fit('PIXEL CIUDADANO', 600, 30, 72, 1840, 340);
+  fit('PIXEL CIUDADANO · ATLAS CIUDADANO', 600, 30, 72, 1840, 520);
   g.textAlign = 'right';
-  fit(spec.source, 400, 26, 1008, 1840, 560);
+  fit(spec.source, 400, 26, 1008, 1840, 400);
   g.textAlign = 'left';
   fit(spec.independent, 400, 24, 72, 1892, 936);
   return canvas;
@@ -121,6 +126,7 @@ export async function drawShareCard(spec) {
 let sheet;
 let generation = 0;
 let copiedTimer;
+let sharing = false;
 
 function getSheet() {
   if (sheet) return sheet;
@@ -191,6 +197,8 @@ async function showSheet(spec, api) {
     const close = dialog.querySelector('.share-sheet__close');
     dialog.querySelector('h2').textContent = t('share.title', 'Comparte tu tarjeta');
     close.setAttribute('aria-label', t('share.close', 'Cerrar'));
+    share.disabled = sharing;
+    share.setAttribute('aria-busy', String(sharing));
     share.textContent = t('share.share', 'Compartir');
     download.textContent = t('share.download', 'Descargar imagen');
     copy.textContent = t('share.copy', 'Copiar enlace');
@@ -220,23 +228,23 @@ async function showSheet(spec, api) {
     try { canShare = !!navigator.canShare?.({ files: [file] }); } catch { /* Se ofrece la descarga. */ }
     const recover = async error => {
       if (error?.name === 'AbortError' || !current()) return;
-      try {
-        const result = await fallback(spec);
-        if (current() && result === 'copied') {
-          status.hidden = false;
-          status.textContent = t('share.copied', 'Enlace copiado');
-        }
-      } catch {
-        if (current()) {
-          status.hidden = false;
-          status.textContent = `${api.t('share.fail')} ${spec.url || ''}`;
-        }
-      }
+      // No se vuelve a abrir el envío nativo: las alternativas ya están visibles.
+      status.hidden = false;
+      status.textContent = `${api.t('share.fail')} ${t('share.download', 'Descargar imagen')} · ${t('share.copy', 'Copiar enlace')}`;
     };
     share.hidden = !canShare;
     share.onclick = async () => {
-      try { await navigator.share({ files: [file], text: spec.shareText, ...(spec.url ? { url: spec.url } : {}) }); }
+      if (sharing) return;
+      sharing = true;
+      share.disabled = true;
+      share.setAttribute('aria-busy', 'true');
+      try { await navigator.share({ files: [file], title: spec.title }); }
       catch (error) { await recover(error); }
+      finally {
+        sharing = false;
+        share.disabled = false;
+        share.setAttribute('aria-busy', 'false');
+      }
     };
     download.hidden = false;
     download.classList.toggle('share-sheet__primary', !canShare);

@@ -1,3 +1,5 @@
+import { drawShareCard, openShareSheet } from './share.js?v=83';
+
 // "Tu dato": cuánto votó la gente como tú (estado, edad y sexo).
 // Todo se calcula en el navegador con los datos del INE; no se guarda ni se envía nada.
 
@@ -77,50 +79,27 @@ export function mountYou(dialog, api) {
       ${api.votingActions()}<p>${t('fix.free')}</p><p class="you-privacy">${t('you.privacy')}</p>`;
   }
 
-  // Tarjeta vertical 1080×1920 para historias (Instagram, TikTok, WhatsApp)
-  async function drawCard() {
-    const n = numbers(), W = 1080, H = 1920;
-    const c = document.createElement('canvas'); c.width = W; c.height = H;
-    const g = c.getContext('2d');
-    try { await Promise.all(['400 40px Inter', '600 40px Inter', '700 200px Inter'].map(f => document.fonts.load(f))); } catch { /* usa la fuente de respaldo */ }
-    g.fillStyle = '#0f0f11'; g.fillRect(0, 0, W, H);
-    // Póster del estado en la parte superior (recortado a 940 px de alto) con degradado hacia el fondo
-    const PH = 940;
-    const img = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = `assets/estados/${state.cc}.webp`; });
-    if (img) { const s = Math.max(W / img.width, PH / img.height); g.save(); g.beginPath(); g.rect(0, 0, W, PH); g.clip(); g.drawImage(img, (W - img.width * s) / 2, 0, img.width * s, img.height * s); g.restore(); }
-    const grad = g.createLinearGradient(0, PH - 320, 0, PH); grad.addColorStop(0, 'rgba(15,15,17,0)'); grad.addColorStop(1, 'rgba(15,15,17,1)');
-    g.fillStyle = grad; g.fillRect(0, PH - 320, W, 320);
-    // Texto (cada línea se reduce si no cabe en el ancho)
-    const X = 72, MAXW = W - 2 * X;
-    const fit = (txt, weight, size, x, y) => { let f = size; do { g.font = `${weight} ${f}px Inter, sans-serif`; f -= 2; } while (g.measureText(txt).width > MAXW && f > 20); g.fillText(txt, x, y); };
-    g.fillStyle = '#f4f4f5'; fit(t('you.cardTitle', { state: n.name }), 600, 54, X, 1010);
-    g.fillStyle = '#a1a1aa'; fit(groupLabel(), 400, 42, X, 1072);
-    g.fillStyle = '#f4f4f5'; g.font = '700 230px Inter, sans-serif'; g.fillText(`${fmt1(n.r)}\u00a0%`, X - 10, 1300);
-    g.fillStyle = api.color(n.r); g.fillRect(X, 1330, 240, 12);
-    g.fillStyle = '#d4d4d8'; fit(t('you.cardWhen'), 400, 38, X, 1410);
-    const k = Math.round(n.r / 10), path = new Path2D(PERSON);
-    for (let i = 0; i < 10; i++) { g.save(); g.translate(X + i * 94, 1450); g.scale(2.4, 2.4); g.fillStyle = i < k ? api.color(n.r) : '#3f3f46'; g.fill(path); g.restore(); }
-    if (n.nat != null) { g.fillStyle = '#a1a1aa'; fit(t('you.cardNat', { v: fmt1(n.nat) }), 400, 38, X, 1620); }
-    g.fillStyle = '#a1a1aa'; fit(api.shareFooter(), 400, 32, X, 1690);
-    g.fillStyle = '#c4b5fd'; fit(t('you.cardCta'), 700, 78, X, 1760);
-    g.fillStyle = '#3f3f46'; g.fillRect(X, 1812, W - 2 * X, 2);
-    g.fillStyle = '#a1a1aa'; g.font = '600 30px Inter, sans-serif'; g.fillText('PIXEL CIUDADANO', X, 1868);
-    g.fillStyle = '#71717a'; g.font = '400 26px Inter, sans-serif'; g.textAlign = 'right'; g.fillText(t('you.cardSrc2'), W - X, 1868); g.textAlign = 'left';
-    g.fillStyle = '#a1a1aa'; fit(t('fix.independent'), 400, 24, X, 1902);
-    return c;
+  // La descarga y el envío usan el mismo diseño y el mismo flujo seguro.
+  function shareSpec() {
+    const n = numbers();
+    return {
+      poster: `assets/estados/${state.cc}.webp`, kicker: t('you.title'),
+      title: n.name, subtitle: groupLabel(), valueText: `${fmt1(n.r)} %`,
+      valueLabel: t('you.cardWhen'), people: Math.round(n.r / 10), color: api.color(n.r),
+      lines: n.nat == null ? [] : [t('you.cardNat', { v: fmt1(n.nat) })],
+      cta: t('you.cardCta'), urlText: api.shareFooter(), independent: t('fix.independent'),
+      source: t('you.cardSrc2'), filename: `mi-dato-${state.cc}.png`,
+      shareText: t('you.shareText', { v: fmt1(n.r), group: groupLabel(), state: n.name }),
+      url: api.publicURL(),
+    };
   }
+  const drawCard = () => drawShareCard(shareSpec());
   async function download() {
     const c = await drawCard();
     c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `mi-dato-${state.cc}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, 'image/png');
   }
-  async function share() {
-    const n = numbers(), text = t('you.shareText', { v: fmt1(n.r), group: groupLabel(), state: n.name }) + ' ' + (api.publicURL() || t('fix.siteName'));
-    try {
-      const c = await drawCard(), blob = await new Promise(r => c.toBlob(r, 'image/png'));
-      const file = new File([blob], `mi-dato-${state.cc}.png`, { type: 'image/png' });
-      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
-    } catch (e) { if (e?.name === 'AbortError') return; }
-    api.share(text);
+  function share() {
+    return openShareSheet(shareSpec(), api);
   }
 
   return {

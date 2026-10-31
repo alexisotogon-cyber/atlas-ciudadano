@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=80';
+import { t } from './i18n.js?v=83';
 
 // Hoja móvil: alturas reales, arrastre directo y avisos al terminar cada ajuste.
 export function mountSheet({ sheet, handle, onChange = () => {}, isNarrow, onSwipe = () => {} }) {
@@ -142,6 +142,19 @@ export function mountSheet({ sheet, handle, onChange = () => {}, isNarrow, onSwi
     if (suppressClick) { e.preventDefault(); return; }
     set(stops[(stops.indexOf(detent) + 1) % 3]);
   });
+  // La portada mide la hoja real para reservar exactamente el espacio del globo.
+  function homeGeometry() {
+    if (!mq.matches || !document.body.classList.contains('mode-home')) return;
+    const box = stage.getBoundingClientRect();
+    sheet.style.setProperty('--home-stage-height', `${box.height}px`);
+    stage.style.setProperty('--home-globe-height', `${Math.max(0, Math.min(box.height, sheet.getBoundingClientRect().top - box.top))}px`);
+  }
+  const homeObserver = new ResizeObserver(homeGeometry);
+  homeObserver.observe(stage); homeObserver.observe(sheet);
+  new MutationObserver(homeGeometry).observe(sheet, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(homeGeometry).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', homeGeometry);
+  homeGeometry();
   function sync() {
     if (enabled()) set(document.body.classList.contains('in-state') ? 'half' : 'peek', { instant: true });
     else {

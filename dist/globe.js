@@ -245,7 +245,7 @@ export function mountGlobe(host, opts = {}) {
   }
   function resize() {
     w = host.clientWidth; h = host.clientHeight;
-    if (opts.mobile && spinning && !flight) cyOff = -h * 0.33;   // en celular México queda arriba de la hoja inferior
+    if (spinning && !flight) cyOff = 0;   // El contenedor de portada ya termina donde empieza la hoja.
     dpr = Math.min(window.devicePixelRatio || 1, opts.mobile ? 1.5 : 2);   // en celular, menos píxeles = menos batería
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -349,6 +349,12 @@ export function mountGlobe(host, opts = {}) {
   canvas.addEventListener('wheel', wheel, { passive: false });
 
   // Sólo números y buffers reutilizados en el pintado; el DOM requiere cadenas CSS.
+  // En portada móvil también caben el aro exterior y un margen de 16 px.
+  function globeRadius() {
+    const radius = Math.min(w, h) * size * zoom;
+    return matchMedia('(max-width: 860px)').matches && spinning && document.body.classList.contains('mode-home')
+      ? Math.min(radius, Math.max(0, (Math.min(w, h) / 2 - 16) / 1.18)) : radius;
+  }
   function frame(now) {
     raf = 0;
     if (!runnable()) return;
@@ -372,7 +378,7 @@ export function mountGlobe(host, opts = {}) {
     if (!reduced) orbit -= dt * 3;
     const a = rotLon * DEG, b = rotLat * DEG;
     const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
-    const radius = Math.min(w, h) * size * zoom, cx = w / 2 + w * offX + cxOff, cy = h / 2 + cyOff;
+    const radius = globeRadius(), cx = w / 2 + w * offX + cxOff, cy = h / 2 + cyOff;
     ctx.clearRect(0, 0, w, h);
     const outer = radius * 512 / 457;
     ctx.drawImage(sphere, cx - outer, cy - outer, outer * 2, outer * 2);
@@ -451,7 +457,7 @@ export function mountGlobe(host, opts = {}) {
       visible: Math.sin(b) * Math.sin(r) + z * Math.cos(r) >= 0 };
   }
   function project(lon, lat) {
-    const p = unitProject(lon, lat), radius = Math.min(w, h) * size * zoom;
+    const p = unitProject(lon, lat), radius = globeRadius();
     return { x: w / 2 + w * offX + cxOff + radius * p.x,
       y: h / 2 + cyOff + radius * p.y, visible: p.visible };
   }
@@ -497,6 +503,8 @@ export function mountGlobe(host, opts = {}) {
       const { ms = 1700, targetRect = null, onProgress = null } =
         typeof options === 'number' ? { ms: options } : (options || {});
       spinning = false;
+      // Al salir de portada, el vuelo utiliza de inmediato el escenario completo.
+      resize();
       // Elige la vuelta más corta para evitar giros acumulados durante el reposo.
       const lon = rotLon + ((-102 - rotLon + 180) % 360 + 360) % 360 - 180;
       let targetZoom = 2.4, cx = 0, cy = 0;

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Atlas ciudadano · Guion narrativo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Silkscreen:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#18181b;--soft:#e4e4e7;--bg2:#f4f4f5;--fill:#6d28d9;--fill2:#ede9fe;--dark:#09090b}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff}
+body{font:400 9.6pt/1.45 Inter,sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{break-after:page;position:relative}
+.page:last-child{break-after:auto}
+.k{font:400 7.2pt/1.2 Silkscreen,monospace;letter-spacing:.08em;text-transform:uppercase}
+h1,h2,h3,p{margin:0}
+b,strong{font-weight:700}
+/* Encabezado de sección: número pixel + título + criterio */
+.sec{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;border-bottom:2px solid var(--line);padding-bottom:6px;margin:0 0 10px}
+.sec .n{width:30px;height:30px;background:var(--ink);color:#fff;display:grid;place-items:center;font:400 11pt Silkscreen,monospace}
+.sec h2{font:800 15pt/1.15 Inter,sans-serif;letter-spacing:-.01em}
+.crit{font:400 6.6pt/1.2 Silkscreen,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--fill);border:1.5px solid var(--fill);padding:4px 6px;white-space:nowrap}
+.lead{font-size:10.2pt;line-height:1.5;margin-bottom:10px;color:var(--ink)}
+.muted{color:var(--muted)}
+.box{border:2px solid var(--line);box-shadow:3px 3px 0 var(--line);background:#fff}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+.sq{display:inline-block;width:8px;height:8px;background:var(--fill);margin-right:6px;vertical-align:1px}
+/* ---------- Portada ---------- */
+.top{display:flex;justify-content:space-between;align-items:center;background:var(--dark);color:#fff;padding:10px 14px}
+.top .brand{display:flex;gap:10px;align-items:center}
+.top .brand b{font:700 10.5pt Inter}
+.top .k{color:#c4b5fd}
+.hero{margin:16px 0 12px}
+.hero h1{font:800 34pt/1 Inter,sans-serif;letter-spacing:-.02em}
+.hero .sub{font:500 12.5pt/1.35 Inter;margin-top:8px;max-width:150mm}
+.links{display:grid;grid-template-columns:1fr 1.7fr 1fr;gap:12px;margin-top:10px;font-size:8.6pt;color:var(--ink)}
+.links span{display:block}
+.links b{display:block;font:400 6.8pt Silkscreen,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--fill);margin-bottom:2px}
+.q{display:grid;grid-template-columns:1.05fr 1fr;gap:12px;margin:12px 0}
+.q .ask{background:var(--bg2);border:2px solid var(--line);padding:12px 14px}
+.q .ask p{font:700 12pt/1.3 Inter;margin-top:6px}
+.q .ans{background:var(--fill);color:#fff;border:2px solid var(--line);box-shadow:3px 3px 0 var(--line);padding:12px 14px}
+.q .ans .k{color:#ddd6fe}
+.q .ans p{font:600 10.4pt/1.42 Inter;margin-top:6px}
+.big{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:10px;margin:14px 0 12px}
+.stat{padding:10px 12px}
+.stat .v{font:800 26pt/1 Inter;letter-spacing:-.02em}
+.stat .v small{font-size:13pt;font-weight:700}
+.stat .l{font-size:8.4pt;line-height:1.35;margin-top:6px;color:var(--muted)}
+.stat.main{background:var(--dark);color:#fff}
+.stat.main .v{font-size:38pt;color:#c4b5fd}
+.stat.main .l{color:#d4d4d8}
+.dots{display:flex;gap:4px;margin-top:8px}
+.dots i{width:12px;height:12px;background:#c4b5fd}.dots i.off{background:#3f3f46}
+.msg{border-left:0;border:2px solid var(--line);padding:10px 14px;font:700 11.5pt/1.35 Inter;display:flex;gap:12px;align-items:center}
+.msg .k{color:var(--fill);white-space:nowrap}
+.five{margin-top:12px;font-size:8.6pt}
+.five table{width:100%;border-collapse:collapse}
+.five th{background:var(--ink);color:#fff;text-align:left;font-weight:600;padding:5px 8px}
+.five td{padding:5px 8px;border-bottom:1px solid var(--soft);vertical-align:top}
+.five td:first-child{font-weight:700;width:34%}
+.five td:last-child{width:14%;font:400 7pt Silkscreen,monospace;color:var(--fill);white-space:nowrap}
+/* ---------- Historia ---------- */
+.steps{border:2px solid var(--line)}
+.step{display:grid;grid-template-columns:28px 1fr 112px;gap:10px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--soft)}
+.step:last-child{border-bottom:0}
+.step .i{width:24px;height:24px;border:2px solid var(--line);display:grid;place-items:center;font:400 9pt Silkscreen,monospace}
+.step.hot .i{background:var(--fill);border-color:var(--fill);color:#fff}
+.step h3{font:700 10pt/1.25 Inter}
+.step p{font-size:8.6pt;line-height:1.4;color:var(--muted);margin-top:2px}
+.step .num{text-align:right;font:800 15pt/1 Inter;letter-spacing:-.01em}
+.step .num small{display:block;font:500 7pt/1.2 Inter;color:var(--faint);margin-top:3px;letter-spacing:0}
+.aud{font-size:8.4pt;width:100%;border-collapse:collapse;margin-top:6px}
+.aud th{background:var(--ink);color:#fff;text-align:left;font-weight:600;padding:5px 7px}
+.aud td{padding:5px 7px;border-bottom:1px solid var(--soft);vertical-align:top}
+.aud td:first-child{font-weight:700}
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.how div{border:2px solid var(--line);padding:8px 9px;font-size:8.3pt;line-height:1.38}
+.how b{display:block;font-size:9pt;margin-bottom:2px}
+/* ---------- Piezas ---------- */
+.pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pc{border:2px solid var(--line);box-shadow:3px 3px 0 var(--line);display:flex;flex-direction:column;background:#fff}
+.pc .shot{height:132px;background:var(--dark);overflow:hidden;border-bottom:2px solid var(--line);display:flex;justify-content:center}
+.pc .shot img{height:100%;width:100%;object-fit:cover;object-position:top}
+.pc .shot.tall img{width:auto;object-fit:contain}
+.pc .body{padding:8px 10px 10px}
+.pc .t{display:flex;align-items:baseline;gap:6px}
+.pc .t .k{color:var(--fill)}
+.pc h3{font:800 11pt/1.2 Inter;margin:2px 0 4px}
+.pc ul{margin:0;padding-left:13px;font-size:8.2pt;line-height:1.38}
+.pc li{margin-bottom:2px}
+.pc .gain{margin-top:6px;font-size:8pt;line-height:1.35;background:var(--fill2);padding:5px 7px;font-weight:600}
+.strip{margin-top:12px;display:grid;grid-template-columns:1fr 2.2fr;gap:12px;align-items:center}
+.strip img{width:100%;border:2px solid var(--line)}
+.strip p{font-size:8.8pt}
+/* ---------- Difusión ---------- */
+.principle{background:var(--dark);color:#fff;padding:10px 14px;display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.principle .k{color:#c4b5fd;white-space:nowrap}
+.principle p{font:600 10.4pt/1.4 Inter}
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:2px solid var(--line);margin-bottom:10px}
+.ph{padding:8px 9px;border-right:2px solid var(--line);font-size:8.2pt;line-height:1.38}
+.ph:last-child{border-right:0}
+.ph .k{color:var(--fill)}
+.ph b{display:block;font-size:9.4pt;margin:3px 0 3px}
+.ch{width:100%;border-collapse:collapse;font-size:8.2pt;line-height:1.35}
+.ch th{background:var(--ink);color:#fff;text-align:left;font-weight:600;padding:5px 6px}
+.ch td{padding:5px 6px;border-bottom:1px solid var(--soft);vertical-align:top}
+.ch td:first-child{font-weight:700;width:19%}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.kpis div{border:2px solid var(--line);padding:7px 8px;font-size:8pt;line-height:1.3}
+.kpis b{display:block;font-size:9pt}
+.note{font-size:8.2pt;color:var(--muted);margin-top:6px}
+/* ---------- Viabilidad ---------- */
+.col h3{font:800 11.5pt Inter;margin-bottom:6px}
+.chk{list-style:none;margin:0;padding:0;font-size:8.8pt;line-height:1.42}
+.chk li{display:grid;grid-template-columns:14px 1fr;gap:6px;margin-bottom:5px}
+.chk li::before{content:'';width:9px;height:9px;background:var(--fill);margin-top:4px}
+.target{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline;font-size:8.8pt;border-bottom:1px solid var(--soft);padding:5px 0}
+.target b{font-size:9.2pt}
+.target span{font:800 11pt Inter;text-align:right}
+.target small{grid-column:1/-1;color:var(--muted);font-size:8pt}
+.meth{margin-top:12px;background:var(--bg2);border:2px solid var(--line);padding:10px 12px;font-size:7.9pt;line-height:1.42}
+.meth h3{font:400 7.6pt Silkscreen,monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;color:var(--fill)}
+.meth p{margin-bottom:4px}
+.phones{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0 4px}
+.phones figure{margin:0}
+.phones img{width:100%;border:2px solid var(--line);box-shadow:3px 3px 0 var(--line);display:block}
+.phones figcaption{font:400 6.8pt Silkscreen,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--fill);margin-top:6px;text-align:center}
+.apply .sec{margin-top:0}
+.t2{grid-template-columns:1fr auto}
+.close{margin-top:12px;display:flex;justify-content:space-between;align-items:center;background:var(--dark);color:#fff;padding:12px 16px}
+.close p{font:700 13pt/1.25 Inter}
+.close .k{color:#c4b5fd}
+</style>
+</head>
+<body>
+
+<!-- =================== PÁGINA 1: PORTADA Y RESUMEN =================== -->
+<section class="page">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="395 130 505 665" width="22" height="29" aria-hidden="true"><path fill="#c4b5fd" d="M470 435H770V284H875V515H740V785H647V663H608V785H517V545H487V657H405V479H470Z"/><rect fill="#c4b5fd" x="540" y="240" width="172" height="165"/><rect fill="#7c3aed" x="770" y="142" width="120" height="120"/></svg>
+      <b>Pixel Ciudadano</b>
+    </div>
+    <span class="k">Hackathon INE 2026 · Reto 3 · Guion narrativo</span>
+  </div>
+
+  <div class="hero">
+    <p class="k" style="color:var(--fill)">Comunicación y visualización con impacto público</p>
+    <h1>Atlas ciudadano</h1>
+    <p class="sub">Un mapa, 32 cartas, un recorrido narrado y un juego para entender quién vota en México y quién falta, rumbo a la elección intermedia de 2027.</p>
+    <div class="links"><span><b>Prototipo</b>atlasciudadano.nodobravo.mx</span><span><b>Código</b>github.com/alexisotogon-cyber/atlas-ciudadano</span><span><b>Datos</b>INE, Conteos Censales 2009–2024</span></div>
+  </div>
+
+  <div class="q">
+    <div class="ask"><span class="k" style="color:var(--fill)">La pregunta del reto</span><p>¿Cómo traducir los datos de participación en mensajes comprensibles para la ciudadanía?</p></div>
+    <div class="ans"><span class="k">Nuestra respuesta</span><p>Con varias puertas de entrada al mismo dato verificado: quien tiene dos minutos sigue la historia, quien tiene curiosidad explora el mapa y quien aprende jugando juega. Todos terminan sabiendo quién vota y quién falta.</p></div>
+  </div>
+
+  <div class="big">
+    <div class="stat main box"><div class="v">59.7&nbsp;%</div><div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i></div><div class="l">votó en 2024. Seis de cada diez personas con credencial: 54.9 de 92.0 millones.</div></div>
+    <div class="stat box"><div class="v">24.4<small> pts</small></div><div class="l"><b>Territorio.</b> Yucatán 71.4&nbsp;% contra Baja California 47.0&nbsp;%.</div></div>
+    <div class="stat box"><div class="v">9.4<small> pts</small></div><div class="l"><b>Sexo.</b> Mujeres 64.2&nbsp;% contra hombres 54.8&nbsp;%, en los 32 estados.</div></div>
+    <div class="stat box"><div class="v">22.3<small> pts</small></div><div class="l"><b>Edad.</b> 60 o más (71.4&nbsp;%) contra 18 a 29 (49.1&nbsp;%).</div></div>
+  </div>
+
+  <div class="msg"><span class="k">Mensaje central</span><span>En México no vota “la gente”: unas personas votan mucho más que otras. Si sabes quién falta, sabes dónde empezar.</span></div>
+
+  <div class="five">
+    <table>
+      <tr><th>Criterio de evaluación</th><th>Cómo lo cumple Atlas ciudadano</th><th>Sección</th></tr>
+      <tr><td>Apego a la temática</td><td>Participación ciudadana con los Conteos Censales oficiales del INE, por estado, municipio, sexo, edad y elección (2009–2024).</td><td>1 y 2</td></tr>
+      <tr><td>Claridad y solidez</td><td>Una métrica protagonista, frases como “6 de cada 10”, cifras que cuadran con la Tabla General del INE y metodología visible.</td><td>1 y nota</td></tr>
+      <tr><td>Originalidad y creatividad</td><td>Mascota narradora, cartas coleccionables por estado, juego de predicción y comparación personal.</td><td>3</td></tr>
+      <tr><td>Viabilidad institucional</td><td>Sitio estático sin servidor ni base de datos; el INE lo publica tal cual y lo actualiza con cada CCPC.</td><td>6</td></tr>
+      <tr><td>Potencial de aplicación</td><td>Señala grupos y territorios prioritarios para 2027 y llega a ellos con un plan de difusión medible.</td><td>4 y 5</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- =================== PÁGINA 2: LA HISTORIA =================== -->
+<section class="page">
+  <div class="sec"><span class="n">1</span><h2>La historia que contamos</h2><span class="crit">Apego · Claridad</span></div>
+  <p class="lead">El promedio nacional esconde tres historias: <b>territorio, sexo y edad</b>. Las contamos en siete pasos, narrados por <b>Pixel</b>, nuestra mascota en pixel art, mientras el mapa vuela al lugar del que habla. Cada paso deja una sola cifra en la memoria.</p>
+
+  <div class="steps">
+    <div class="step"><span class="i">1</span><div><h3>“6 de cada 10 votaron. ¿Quién falta?”</h3><p>El gancho: el número que todos creen conocer, convertido en 10 siluetas.</p></div><div class="num">59.7&nbsp;%<small>votó en 2024</small></div></div>
+    <div class="step"><span class="i">2</span><div><h3>De Baja California a Yucatán</h3><p>El estado pesa. En la intermedia de 2021, en Baja California solo votó el 28.3&nbsp;% de los jóvenes.</p></div><div class="num">24.4 pts<small>71.4&nbsp;% contra 47.0&nbsp;%</small></div></div>
+    <div class="step"><span class="i">3</span><div><h3>Las mujeres votan más</h3><p>La brecha más grande entre presidenciales (8.3 en 2012). Va de 6.0 puntos en Chihuahua a 12.5 en Guanajuato.</p></div><div class="num">9.4 pts<small>en los 32 estados</small></div></div>
+    <div class="step"><span class="i">4</span><div><h3>Quienes menos votan: hombres de 18 a 29</h3><p>Entre jóvenes (49.1&nbsp;%) y personas de 60 o más (71.4&nbsp;%) hay 22.3 puntos.</p></div><div class="num">43.2&nbsp;%<small>el grupo más bajo</small></div></div>
+    <div class="step"><span class="i">5</span><div><h3>En las intermedias vota menos gente</h3><p>2009: 44.1&nbsp;% · 2015: 47.1&nbsp;% · 2021: 51.8&nbsp;%, contra 62.1&nbsp;%, 62.4&nbsp;% y 59.7&nbsp;% en presidenciales. Cada intermedia superó a la anterior.</p></div><div class="num">2027<small>será intermedia</small></div></div>
+    <div class="step"><span class="i">6</span><div><h3>¿Y en tu municipio?</h3><p>En los municipios con menos de 10 mil personas en la lista se vota más que en los de más de 75 mil.</p></div><div class="num">64.9&nbsp;%<small>contra 58.7&nbsp;%</small></div></div>
+    <div class="step hot"><span class="i">7</span><div><h3>El reto de 2027: los jóvenes</h3><p>En 2021 votó el 42.0&nbsp;% de los jóvenes y el 63.2&nbsp;% de las personas de 60 o más. Escenario hipotético: si votaran como sus abuelos.</p></div><div class="num">+5.2 M<small>votos más</small></div></div>
+  </div>
+
+  <div class="how">
+    <div><b>Proporciones, no decimales</b>“6 de cada 10” antes que 59.68&nbsp;%.</div>
+    <div><b>Un color con significado</b>Morado oscuro es menos participación, amarillo es más, en todo el sitio.</div>
+    <div><b>Sin regaños</b>Pixel invita: “Ojo aquí”, “Mira”, “En 2027 cuento yo”.</div>
+    <div><b>Cifras que cuadran</b>Las diferencias se calculan con los valores ya redondeados.</div>
+  </div>
+
+  <div class="sec" style="margin-top:14px"><span class="n">2</span><h2>A quién le habla</h2><span class="crit">Apego a la temática</span></div>
+  <table class="aud">
+    <tr><th>Público</th><th>Qué necesita</th><th>Por dónde entra</th></tr>
+    <tr><td>Jóvenes de 18 a 29 años (principal)</td><td>Verse reflejados sin sermón, en el celular</td><td>Misión 2027, Tu dato y su carta para compartir</td></tr>
+    <tr><td>Ciudadanía en general</td><td>Entender su estado y su municipio</td><td>El mapa y el recorrido de Pixel</td></tr>
+    <tr><td>Docentes de civismo</td><td>Material real, listo para clase</td><td>Modo presentación, juego en equipos y datos en CSV</td></tr>
+    <tr><td>Periodistas y organizaciones</td><td>Cifras trazables</td><td>Fichas por lugar, descarga de datos y metodología</td></tr>
+    <tr><td>Áreas del INE</td><td>Dónde enfocar esfuerzos</td><td>Brechas por territorio, sexo y edad</td></tr>
+  </table>
+</section>
+
+<!-- =================== PÁGINA 3: LO QUE CONSTRUIMOS =================== -->
+<section class="page">
+  <div class="sec"><span class="n">3</span><h2>Lo que construimos: seis piezas</h2><span class="crit">Originalidad y creatividad</span></div>
+  <p class="lead">No es un tablero más. Son seis piezas que se refuerzan entre sí, todas sobre los mismos datos y pensadas primero para el celular.</p>
+
+  <div class="pieces">
+    <article class="pc"><div class="shot"><img src="img/mapa.jpg" alt=""></div><div class="body"><div class="t"><span class="k">01</span></div><h3>El mapa vivo</h3><ul><li>32 estados, 6 regiones y casi 2,500 municipios.</li><li>6 elecciones, de 2009 a 2024, con botón que las reproduce.</li><li>Filtros combinables por sexo y edad; buscador.</li></ul><p class="gain">Aporta: cada persona encuentra su lugar en el mapa.</p></div></article>
+    <article class="pc"><div class="shot tall"><img src="img/carta.jpg" alt=""></div><div class="body"><div class="t"><span class="k">02</span></div><h3>Las cartas de los estados</h3><ul><li>32 cartas coleccionables, con paisaje y capital de cada estado.</li><li>Lugar entre 32, insignias como “Top 5” y desglose por sexo y edad.</li><li>Evolución 2009–2024 en una línea.</li></ul><p class="gain">Aporta: una tabla de 32 filas se vuelve algo que se colecciona.</p></div></article>
+    <article class="pc"><div class="shot"><img src="img/recorrido.jpg" alt=""></div><div class="body"><div class="t"><span class="k">03</span></div><h3>El recorrido de Pixel</h3><ul><li>La historia en 7 pasos, con el mapa siguiendo la narración.</li><li>En celular, formato de historia con barra de progreso.</li><li>Cierra con el simulador de 2027.</li></ul><p class="gain">Aporta: la idea completa en dos minutos.</p></div></article>
+    <article class="pc"><div class="shot"><img src="img/juego-c.jpg" alt=""></div><div class="body"><div class="t"><span class="k">04</span></div><h3>Misión 2027, el juego</h3><ul><li>5 preguntas en 2 minutos, con datos reales.</li><li>Primero apuestas (cuadritos, barra o el mapa); luego se revela la cifra.</li><li>Al final desbloqueas la carta de tu estado.</li></ul><p class="gain">Aporta: adivinar antes de ver hace que el dato se recuerde.</p></div></article>
+    <article class="pc"><div class="shot"><img src="img/tudato-c.jpg" alt=""></div><div class="body"><div class="t"><span class="k">05</span></div><h3>Tu dato</h3><ul><li>Estado, edad y sexo: cuántos de cada 10 como tú votaron.</li><li>Comparado con el país y con las personas de 60 o más.</li><li>Se calcula en el navegador; no se guarda nada.</li></ul><p class="gain">Aporta: el dato deja de ser ajeno: “En 2027 cuento yo”.</p></div></article>
+    <article class="pc"><div class="shot"><img src="img/share-c.jpg" alt="" style="object-position:center"></div><div class="body"><div class="t"><span class="k">06</span></div><h3>Compartir y enseñar</h3><ul><li>Imágenes verticales 1080×1920, siempre con fuente y año.</li><li>Modo presentación y kit para el aula (CSV y vista para imprimir).</li><li>Español e inglés, claro y oscuro, accesible.</li></ul><p class="gain">Aporta: el dato sale del sitio y llega a redes y aulas.</p></div></article>
+  </div>
+
+  <div class="strip"><p><b>Pensado para el celular.</b> Mapa a pantalla completa, ficha que se desliza con el dedo, flechas para pasar de un estado a otro y botones siempre visibles. Navegación con teclado, contraste AA y respeto a quien prefiere menos movimiento.</p><img src="img/tira.jpg" alt=""></div>
+</section>
+
+<!-- =================== PÁGINA 4: DIFUSIÓN =================== -->
+<section class="page">
+  <div class="sec"><span class="n">4</span><h2>Propuesta de difusión rumbo a 2027</h2><span class="crit">Potencial de aplicación</span></div>
+  <div class="principle"><span class="k">Principio</span><p>Un dato propio (mi estado, mi edad, mi carta) se comparte más que una campaña genérica. Cada pieza lleva al sitio, y el sitio devuelve una imagen lista para redes.</p></div>
+
+  <div class="phases">
+    <div class="ph"><span class="k">Fase 1 · nov 2026–feb 2027</span><b>Aulas y módulos</b>Clase con el recorrido en modo presentación y el juego en equipos. Código QR en los módulos de credencialización.</div>
+    <div class="ph"><span class="k">Fase 2 · mar–abr 2027</span><b>Reto en redes</b>“Juega Misión 2027 y comparte tu carta.” Videos de 20–30 s con Pixel, dos por semana.</div>
+    <div class="ph"><span class="k">Fase 3 · mayo 2027</span><b>Un estado por día</b>La carta de cada estado en las redes del INE y de las juntas locales, con su cifra y una pregunta.</div>
+    <div class="ph"><span class="k">Fase 4 · después de la jornada</span><b>Rendir cuentas</b>Se suman los Conteos Censales de 2027 y se publica qué cambió en cada grupo.</div>
+  </div>
+
+  <table class="ch">
+    <tr><th>Canal</th><th>Pieza del Atlas</th><th>Público</th><th>Ejemplo de mensaje</th></tr>
+    <tr><td>TikTok, Reels y Shorts</td><td>Video corto con Pixel y el mapa</td><td>18–29 años</td><td>“En tu estado ellas votan más que ellos. ¿Y tú?”</td></tr>
+    <tr><td>Redes del INE y juntas locales</td><td>Carta del estado</td><td>Ciudadanía</td><td>“Esta es la carta de Yucatán: 71.4&nbsp;%. ¿Y la de tu estado?”</td></tr>
+    <tr><td>Reto en redes</td><td>Misión 2027 + carta desbloqueada</td><td>Jóvenes</td><td>“Saqué 4 de 5. ¿Le ganas a mi carta?”</td></tr>
+    <tr><td>Escuelas</td><td>Recorrido en modo presentación y juego</td><td>Docentes y estudiantes</td><td>“Compara tu estado con el país.”</td></tr>
+    <tr><td>Módulos de credencialización</td><td>Cartel con QR a Tu dato</td><td>Quien tramita su credencial</td><td>“¿Cuánto vota la gente como tú?”</td></tr>
+    <tr><td>Prensa y radio comunitaria</td><td>Ficha del estado y CSV</td><td>Medios locales e indígenas</td><td>Brechas por sexo y edad de su estado</td></tr>
+  </table>
+
+  <div class="kpis">
+    <div><b>Recorridos completados</b>¿Llegan al paso 7?</div>
+    <div><b>Partidas jugadas</b>y aciertos por pregunta</div>
+    <div><b>Cartas e imágenes</b>compartidas por estado</div>
+    <div><b>Búsquedas</b>de municipios</div>
+    <div><b>Aulas</b>que usan el modo presentación</div>
+  </div>
+  <p class="note">No prometemos que un mapa suba la participación: medimos si la gente entiende el dato, lo usa y lo comparte.</p>
+  <div style="margin-top:14px">
+    <div class="apply">
+      <div class="sec"><span class="n">5</span><h2>Dónde aplicarlo primero</h2><span class="crit">Potencial de aplicación</span></div>
+      <div class="target t2"><b>Hombres de 18 a 29 años</b><span>43.2&nbsp;%</span><small>El grupo que menos vota en el país.</small></div>
+      <div class="target t2"><b>Jóvenes en elecciones intermedias</b><span>42.0&nbsp;%</span><small>Su participación en 2021; 2027 también será intermedia.</small></div>
+      <div class="target t2"><b>Frontera norte</b><span>47.0–51.9&nbsp;%</span><small>Baja California, Sonora y Chihuahua: los tres estados más bajos de 2024.</small></div>
+      <div class="target t2"><b>Municipios grandes</b><span>58.7&nbsp;%</span><small>Los de más de 75 mil personas votan menos que los pequeños (64.9&nbsp;%).</small></div>
+      <p class="note">Cada ficha descarga los datos de sus municipios en CSV para que las juntas locales prioricen su territorio.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== PÁGINA 5: VIABILIDAD Y APLICACIÓN =================== -->
+<section class="page">
+  <div class="sec"><span class="n">6</span><h2>Viabilidad para el INE</h2><span class="crit">Viabilidad institucional</span></div>
+  <div class="grid g2" style="gap:16px">
+    <div class="col">
+      <ul class="chk">
+        <li><span><b>Listo para publicar.</b> Sitio estático (HTML, CSS y JavaScript con archivos de datos): sin servidor, base de datos ni compilación. Se aloja en cualquier hosting, incluido el del Instituto.</span></li>
+        <li><span><b>Se actualiza solo con datos.</b> Tras cada elección se agrega el año con los scripts del repositorio; mapa, cartas, recorrido y juego lo incorporan sin rediseño.</span></li>
+        <li><span><b>Usa lo que el INE ya publica.</b> Los Conteos Censales de Participación Ciudadana; nada nuevo que recolectar.</span></li>
+        <li><span><b>Bajo costo y bajo riesgo.</b> Solo datos públicos y agregados; no recopila datos personales.</span></li>
+        <li><span><b>Código público y cedido.</b> El repositorio está documentado y los derechos se ceden al INE conforme a la convocatoria.</span></li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Siguientes pasos</h3>
+      <ul class="chk">
+        <li><span><b>Junio 2027:</b> sumar los Conteos Censales de la elección intermedia en cuanto se publiquen.</span></li>
+        <li><span><b>Distritos electorales</b> y voto desde el extranjero como nuevas capas del mapa.</span></li>
+        <li><span><b>Lenguas indígenas:</b> versiones del recorrido y de Tu dato.</span></li>
+        <li><span><b>Guía docente</b> descargable de una sesión, con el juego en equipos.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phones">
+    <figure><img src="img/ph1.jpg" alt=""><figcaption>Inicio</figcaption></figure>
+    <figure><img src="img/ph2.jpg" alt=""><figcaption>Recorrido</figcaption></figure>
+    <figure><img src="img/ph3.jpg" alt=""><figcaption>Ficha del estado</figcaption></figure>
+    <figure><img src="img/ph4.jpg" alt=""><figcaption>Misión 2027</figcaption></figure>
+  </div>
+  <div class="meth">
+    <h3>Nota metodológica</h3>
+    <p><b>Fuente.</b> INE, Conteos Censales de Participación Ciudadana de las elecciones federales de 2009, 2012, 2015, 2018, 2021 y 2024. Geometrías de estados y municipios: INEGI.</p>
+    <p><b>Cálculo.</b> Participación = personas que votaron ÷ (lista nominal − registros sin sexo o edad especificados), por estado, municipio, sexo y edad (18–29, 30–44, 45–59, 60+). Las cifras nacionales suman las 32 entidades. Las diferencias en puntos se calculan con valores redondeados a un decimal.</p>
+    <p><b>Validación.</b> Los archivos usados tienen la misma huella SHA-256 que los publicados por el INE, y las cifras estatales de 2024 coinciden con la Tabla General de los Conteos Censales.</p>
+    <p><b>Limitaciones.</b> No incluye casillas especiales ni voto desde el extranjero, por lo que puede diferir de los cómputos oficiales. Se mide sobre la lista nominal, no sobre la población total. Se ocultan los municipios con menos de 100 registros en un grupo. El escenario de 2027 es hipotético y el análisis es descriptivo, no causal.</p>
+    <p><b>Transparencia.</b> Las ilustraciones de las cartas se generaron con IA para el proyecto, como se indica en el sitio. Atlas ciudadano es un proyecto independiente, no un sitio oficial del INE.</p>
+  </div>
+
+  <div class="close"><p>Si sabes quién falta, sabes dónde empezar.</p><span class="k">atlasciudadano.nodobravo.mx</span></div>
+</section>
+
+</body>
+</html>

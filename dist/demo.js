@@ -1,4 +1,4 @@
-import { icon as svgIcon } from './icons.js?v=80';
+import { icon as svgIcon } from './icons.js?v=83';
 
 // Recorrido narrado por Pixel; la aplicación conserva el control del mapa.
 export function startDemo(host, api) {

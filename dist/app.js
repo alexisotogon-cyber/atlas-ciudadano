@@ -1,16 +1,16 @@
 // Coloca aquí el dominio público al desplegar.
 const SITE_URL = 'https://atlasciudadano.nodobravo.mx';
-import { mountSheet } from './sheet.js?v=80';
-import { icon } from './icons.js?v=80';
-import { t, lang, locale, setLang, applyStatic, diff1 } from './i18n.js?v=80';
+import { mountSheet } from './sheet.js?v=83';
+import { icon } from './icons.js?v=83';
+import { t, lang, locale, setLang, applyStatic, diff1 } from './i18n.js?v=83';
 // Pixel Ciudadano · Atlas ciudadano (INE, CCPC 2009–2024). Equipo Pixel Ciudadano.
 // Layout "Atlas": menú lateral · tira de estados · objeto central (globo → mapa) · ficha de detalle.
-import { mountGlobe } from './globe.js?v=80';
-import { renderCard } from './card.js?v=80';
-import { startDemo } from './demo.js?v=80';
-import { mountYou } from './you.js?v=80';
-import { startTutorial } from './tutorial.js?v=80';
-import { openShareSheet } from './share.js?v=80';
+import { mountGlobe } from './globe.js?v=83';
+import { renderCard } from './card.js?v=83';
+import { startDemo } from './demo.js?v=83';
+import { mountYou } from './you.js?v=83';
+import { startTutorial } from './tutorial.js?v=83';
+import { openShareSheet } from './share.js?v=83';
 
 const $ = s => document.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
@@ -1206,7 +1206,7 @@ async function startGame() {
   if (mission || gameLoading) return;
   gameLoading = true;
   try {
-    const { startMission } = await import('./game.js?v=80');
+    const { startMission } = await import('./game.js?v=83');
     if (mission) return;
     let chosenCC = null;
     if (demo) endTour();

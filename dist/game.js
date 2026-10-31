@@ -1,4 +1,4 @@
-import { icon } from './icons.js?v=80';
+import { icon } from './icons.js?v=83';
 
 // Misión 2027: toda la partida vive en memoria y usa los datos de la aplicación.
 export function startMission(host, api) {
